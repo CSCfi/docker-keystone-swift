@@ -1,0 +1,169 @@
+# https://github.com/Huachao/vscode-restclient
+# https://docs.openstack.org/api-ref/identity/v3/
+# https://jsonpath.com/
+
+# swift:veryfast
+
+@keystone = http://localhost:5000
+@username = swift
+@password = veryfast
+@project = service
+
+@authToken = {{unscopedToken.response.headers.X-Subject-Token}}
+@authTokenScoped = {{tokenScoped.response.headers.X-Subject-Token}}
+@storageURL = {{scopedToken.response.body.$..catalog[?(@.name == "swift")].endpoints[0].url}}
+
+### Password authentication with unscoped authorization
+# @name unscopedToken
+POST {{keystone}}/v3/auth/tokens
+content-type: application/json
+
+{
+  "auth": {
+    "identity": {
+      "methods": ["password"],
+      "password": {
+        "user": {
+          "domain": { "id": "default" },
+          "name": "{{username}}",
+          "password": "{{password}}"
+        }
+      }
+    }
+  }
+}
+
+### Password authentication with scoped authorization
+# @name scopedToken
+POST {{keystone}}/v3/auth/tokens
+content-type: application/json
+
+{
+  "auth": {
+    "identity": {
+      "methods": ["password"],
+      "password": {
+        "user": {
+          "domain": { "id": "default" },
+          "name": "{{username}}",
+          "password": "{{password}}"
+        }
+      }
+    },
+    "scope": {
+      "project": {
+        "name": "{{project}}",
+        "domain": { "id": "default" }
+      }
+    }
+  }
+}
+
+### Token authentication with scoped authorization
+# @name tokenScoped
+POST {{keystone}}/v3/auth/tokens
+content-type: application/json
+
+{
+  "auth": {
+    "identity": {
+      "methods": ["token"],
+      "token": {
+        "id": "{{authToken}}"
+      }
+    },
+    "scope": {
+      "project": {
+        "name": "{{project}}",
+        "domain": { "id": "default" }
+      }
+    }
+  }
+}
+
+
+### Validate and show information for token
+GET {{keystone}}/v3/auth/tokens
+X-Auth-Token: {{authToken}}
+X-Subject-Token: {{authTokenScoped}}
+
+### projects
+GET {{keystone}}/v3/auth/projects
+X-Auth-Token: {{authToken}}
+
+
+### SWIFT
+
+@container = bucket-000
+@filename = text.txt
+
+### Read all containers
+GET {{storageURL}}?format=json
+X-Auth-Token: {{authTokenScoped}}
+
+### Create container
+PUT {{storageURL}}/{{container}}
+X-Auth-Token: {{authTokenScoped}}
+
+### List of container objects
+GET {{storageURL}}/{{container}}?format=json
+X-Auth-Token: {{authTokenScoped}}
+
+### Read container metadata
+HEAD {{storageURL}}/{{container}}
+X-Auth-Token: {{authTokenScoped}}
+
+### Upload text file
+PUT {{storageURL}}/{{container}}/{{filename}}
+X-Auth-Token: {{authTokenScoped}}
+Content-Type: multipart/form-data; boundary=----uploading
+------uploading
+
+let's do it!
+
+### Download text file
+GET {{storageURL}}/{{container}}/{{filename}}
+X-Auth-Token: {{authTokenScoped}}
+
+
+### TempAuth
+@tmpUsername = test:tester
+@tmpPassword = testing
+
+@tmpAuthURL = http://localhost:8080/auth/v1.0
+@tmpStorageURL = {{tmpAuth.response.headers.X-Storage-URL}}
+@tmpToken = {{tmpAuth.response.headers.X-Auth-Token}}
+
+# @name tmpAuth
+GET {{tmpAuthURL}}
+X-Storage-User: {{tmpUsername}}
+X-Storage-Pass: {{tmpPassword}}
+
+### Read all containers
+GET {{tmpStorageURL}}?format=json
+X-Auth-Token: {{tmpToken}}
+
+### Read account meta
+HEAD {{tmpStorageURL}}
+X-Auth-Token: {{tmpToken}}
+
+### Read container meta
+GET {{tmpStorageURL}}/bucket-001
+X-Auth-Token: {{tmpToken}}
+
+### Create container
+PUT {{tmpStorageURL}}/test-cont
+X-Auth-Token: {{tmpToken}}
+
+### Upload text file
+PUT {{tmpStorageURL}}/test-cont/test-file-2
+X-Auth-Token: {{tmpToken}}
+Content-Type: multipart/form-data; boundary=----uploading
+------uploading
+
+let's do it!
+
+### Download object
+GET {{tmpStorageURL}}/test-cont/test-file-2
+X-Auth-Token: {{tmpToken}}
+
