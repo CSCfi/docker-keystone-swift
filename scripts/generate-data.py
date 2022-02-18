@@ -166,7 +166,7 @@ def populate_from_json(
         for obj in container["objects"]:
             obj_name = obj["name"]
             headers = {
-                f"X-Object-Meta-{key}": item for key, item in container["meta"].items()
+                f"X-Object-Meta-{key}": item for key, item in obj["meta"].items()
             }
             headers["X-Auth-Token"] = token
             headers["Content-Type"] = "text/plain"
