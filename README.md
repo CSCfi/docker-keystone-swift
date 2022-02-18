@@ -12,7 +12,7 @@ This image was created as a combination of other existing approaches, none of wh
 - [jeantil/openstack-swift-keystone-docker](https://github.com/jeantil/openstack-swift-keystone-docker)
 
 ## Stack
-This container is based on `python:3.8-slim` and installs tarballs from
+This container is based on `debian:11.2-slim` and installs tarballs from
 [OpenStack release Wallaby](https://docs.openstack.org/wallaby/install/).
 Furthermore, the image includes [s6-overlay](https://github.com/just-containers/s6-overlay)
 to manage processes.
