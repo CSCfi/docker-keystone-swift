@@ -144,13 +144,18 @@ def generate_data(
             print()
     if not quiet:
         end = time.perf_counter() - start
-        print(f"Done in {end:.2f} seconds")
+        print(f"Done in {end:.2f} seconds.")
 
 
 def populate_from_json(
     swift_url: str, token: str, data: dict, verbose=False, quiet=False
 ):
-    start = time.perf_counter()
+    if not quiet:
+        start = time.perf_counter()
+        print()
+        n_containers = len(data)
+        n_objects = sum( (len(cont["objects"]) for cont in data) )
+        print(f"Creating {n_containers} containers with {n_objects} objects in total")
 
     for container in data:
         container_name = container["name"]
@@ -179,8 +184,9 @@ def populate_from_json(
                 print(f"ERROR {r.status_code} {obj_name}")
             if verbose and not quiet:
                 print(f"{r.status_code} {obj_name}")
-    end = time.perf_counter() - start
-    print(f"Done in {end:.2f} seconds")
+    if not quiet:
+        end = time.perf_counter() - start
+        print(f"Done in {end:.2f} seconds.")
 
 
 def run(
@@ -205,6 +211,8 @@ def run(
                 print(f"Populating data from {json_path}")
             for container in data:
                 containers_obj_count += len(container["objects"])
+            n_containers = len(data)
+            n_objects = sum( (len(cont["objects"]) for cont in data) )
             populate_from_json(swift_url, token, data, verbose, quiet)
         else:
             containers_obj_count = get_all_containers_obj_count(swift_url, token)
@@ -213,7 +221,8 @@ def run(
         if verbose and not quiet:
             print()
             print("Wait until metadata updates")
-        expected = n_objects * n_containers + existing_objs
+
+        expected = existing_objs + n_objects
 
         print()
         obj = get_account_obj_count(swift_url, token)
@@ -221,12 +230,12 @@ def run(
         while True:
             obj = get_account_obj_count(swift_url, token)
             containers_obj_count = get_all_containers_obj_count(swift_url, token)
-            if obj == expected:
+            if obj == containers_obj_count:
                 break
             current = time.perf_counter() - start
             if not quiet:
                 print(
-                    f"Current: {obj}, expected: {expected}, container obj {containers_obj_count}. Waited for {current:.2f} seconds",
+                    f"Current: {obj}, expected: {expected}, started with {existing_objs}. Created {containers_obj_count - existing_objs} new objects. Waited for {current:.2f} seconds",
                     end="\r",
                 )
             if time.perf_counter() - start_timeout >= timeout:
@@ -235,7 +244,7 @@ def run(
         end = time.perf_counter() - start
         if not quiet:
             print(
-                f"We got {obj} objects, expected: {expected}, container objs {containers_obj_count}. Done in {end:.2f} seconds", end="\r"
+                f"We got {obj} objects, expected: {expected}, started with {existing_objs}. Created {containers_obj_count - existing_objs} new objects. Done in {end:.2f} seconds", end="\r"
             )
 
 
