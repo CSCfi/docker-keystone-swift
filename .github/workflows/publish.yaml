@@ -26,8 +26,8 @@ jobs:
           context: .
           tags: |
             ghcr.io/cscfi/keystone-swift:latest
-          # build on feature branches, push only on master branch
-          push: ${{ github.ref == 'refs/heads/master' }}
+          # build on feature branches, push only on main branch
+          push: ${{ github.ref == 'refs/heads/main' }}
 
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
