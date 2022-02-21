@@ -28,7 +28,7 @@ Start the container using the following command:
 
 Or use the built images from ghrc.io
 
-    docker run -d --init -p 5000:5000 -p 8080:8080 --name keystone-swift ghcr.io/cscfi/keystone-swift
+    docker run -d --init -p 5000:5000 -p 8080:8080 --name keystone-swift ghcr.io/cscfi/docker-keystone-swift:latest
 
 Stop it with
 
@@ -49,7 +49,7 @@ The following commands are available in the container:
 Use the scripts to generate data into the object storage, and test the endpoints.
 
 ## Preconfigured credentials
-The container comes with 2 preconfigures accounts:
+The container comes with 2 preconfigured accounts:
 - admin / superuser
 - swift / veryfast
 
