@@ -77,7 +77,7 @@ RUN         --mount=type=cache,target=/root/.cache/pip \
                 /tmp/python-swiftclient-${SWIFTCLIENT_VERSION}.tar.gz \
                 /tmp/python-keystoneclient-${KEYSTONECLIENT_VERSION}.tar.gz \
                 /tmp/python-openstackclient-${OPENSTACKCLIENT_VERSION}.tar.gz \
-        &&  pip install pytz \
+        &&  pip install pytz python-lorem requests \
         &&  pip install /usr/local/src/swift-${SWIFT_VERSION}/ \
         &&  pip install /usr/local/src/keystone-${KEYSTONE_VERSION}/ \
         &&  pip install /usr/local/src/keystonemiddleware-${KEYSTONEMIDDLEWARE_VERSION}/ \
@@ -98,6 +98,7 @@ RUN         tar -C / -xf /tmp/s6-overlay-$ARCH.tar.gz \
         &&  rm -rf /tmp/socklog-overlay*
 
 COPY        docker/rootfs /
+COPY        scripts/generate_data.py /usr/local/bin/
 
 # Prepare
 RUN         useradd -U swift \ 

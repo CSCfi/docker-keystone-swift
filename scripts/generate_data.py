@@ -17,7 +17,6 @@ import requests
 keystone_url_template = "http://{host}:{port}/v3".format
 swift_url_template = "http://{host}:{port}/auth/v1.0".format
 
-
 def wait_for_port(url, timeout=5.0, verbose=False, quiet=False):
     start_time = time.perf_counter()
 
@@ -115,39 +114,52 @@ def get_all_containers_obj_count(swift_url: str, token: str) -> int:
     return total
 
 
-def generate_data(
-    swift_url: str, token: str, n_containers=5, n_objects=5, verbose=False, quiet=False
-):
-    if not quiet:
-        start = time.perf_counter()
-        print()
-        print(f"Creating {n_containers} containers with {n_objects} objects each")
+def create_from_lorem(n_containers, n_objects):
+    data = []
+    container_names = set()
     for i in range(0, n_containers):
-        container = f"bucket-{i:03d}"
-        r = requests.put(f"{swift_url}/{container}", headers={"X-Auth-Token": token})
-        if r.status_code not in {201, 202}:
-            print(f"ERROR {r.status_code} {container}")
-        if verbose and not quiet:
-            print(f"{r.status_code} {container}")
+        objects = []
+        object_names = set()
         for _ in range(0, n_objects):
-            filename = hashlib.sha1(os.urandom(256)).hexdigest() + ".txt"
-            r = requests.put(
-                f"{swift_url}/{container}/{filename}",
-                headers={"X-Auth-Token": token, "Content-Type": "text/plain"},
-                files={"files": (filename, lorem.get_paragraph())},
+            while True:
+                obj_name = lorem.get_sentence(comma=(0, 0), word_range=(1, 3)) + "txt"
+                if obj_name in object_names:
+                    continue
+                object_names.add(obj_name)
+                objects.append(
+                    {
+                        "name": obj_name,
+                        "content": lorem.get_paragraph(),
+                        "meta": {
+                            "usertags": lorem.get_sentence(comma=(0, 0), word_range=(1, 4))[
+                                :-1
+                            ].replace(" ", ";")
+                        },
+                    }
+                )
+                break
+        while True:
+            cont_name = lorem.get_sentence(comma=(0, 0), word_range=(1, 3))[:-1]
+            if cont_name in container_names:
+                continue
+            container_names.add(cont_name)
+            data.append(
+                {
+                    "name": lorem.get_sentence(comma=(0, 0), word_range=(1, 3))[:-1],
+                    "objects": objects,
+                    "meta": {
+                        "usertags": lorem.get_sentence(comma=(0, 0), word_range=(1, 4))[
+                            :-1
+                        ].replace(" ", ";")
+                    },
+                }
             )
-            if r.status_code != 201:
-                print(f"ERROR {r.status_code} {filename}")
-            if verbose and not quiet:
-                print(f"{r.status_code} {filename}")
-        if verbose and not quiet:
-            print()
-    if not quiet:
-        end = time.perf_counter() - start
-        print(f"Done in {end:.2f} seconds.")
+            break
+    
+    return data
 
 
-def populate_from_json(
+def populate_swift(
     swift_url: str, token: str, data: dict, verbose=False, quiet=False
 ):
     if not quiet:
@@ -160,7 +172,7 @@ def populate_from_json(
     for container in data:
         container_name = container["name"]
         headers = {
-            f"X-Object-Meta-{key}": item for key, item in container["meta"].items()
+            f"X-Container-Meta-{key}": item for key, item in container["meta"].items()
         }
         headers["X-Auth-Token"] = token
         r = requests.put(f"{swift_url}/{container_name}", headers=headers)
@@ -204,25 +216,24 @@ def run(
         start_timeout = time.perf_counter()
         existing_objs = get_account_obj_count(swift_url, token)
         containers_obj_count = 0
-        if json_path and os.path.isfile(json_path):
+        if json_path:
             with open(json_path, "r") as fp:
                 data = json.load(fp)
             if not quiet:
                 print(f"Populating data from {json_path}")
-            for container in data:
-                containers_obj_count += len(container["objects"])
             n_containers = len(data)
-            n_objects = sum( (len(cont["objects"]) for cont in data) )
-            populate_from_json(swift_url, token, data, verbose, quiet)
+            n_objects = len(data[0]["objects"])
         else:
-            containers_obj_count = get_all_containers_obj_count(swift_url, token)
-            generate_data(swift_url, token, n_containers, n_objects, verbose, quiet)
+            data = create_from_lorem(n_containers, n_objects)
+
+        containers_obj_count = get_all_containers_obj_count(swift_url, token)
+        populate_swift(swift_url, token, data, verbose, quiet)
 
         if verbose and not quiet:
             print()
             print("Wait until metadata updates")
 
-        expected = existing_objs + n_objects
+        expected = existing_objs + (n_objects * n_containers)
 
         print()
         obj = get_account_obj_count(swift_url, token)
