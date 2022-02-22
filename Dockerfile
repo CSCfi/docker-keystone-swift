@@ -130,9 +130,11 @@ RUN         useradd -U swift \
         &&  su -s /bin/sh -c "/usr/local/bin/keystone-wsgi-public -b localhost -p 5000 & sleep 3" \
 # Creating project and user
         &&  bash -c "/usr/local/bin/keystone-wsgi-public -b localhost -p 5000 &" \
-        &&  openstack project create --domain default --description "Service Project" service \
         &&  openstack user create --domain default --password veryfast swift \
+        &&  openstack project create --domain default --description "Service test project" service \
+        &&  openstack project create --domain default --description "Swift test project" swift-project \
         &&  openstack role add --project service --user swift admin \
+        &&  openstack role add --project swift-project --user swift admin \
 # Connect swift to keystone
         &&  openstack service create --name swift --description "OpenStack Object Storage" object-store \
         &&  openstack endpoint create --region RegionOne object-store internal $OS_SWIFT_URL/AUTH_%\(project_id\)s \

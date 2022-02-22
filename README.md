@@ -53,6 +53,11 @@ The container comes with 2 preconfigured accounts:
 - admin / superuser
 - swift / veryfast
 
+## Preconfigured projects
+The container comes with 2 preconfigured projects:
+- service (Service test project) | swift admin user
+- swift-project (Swift test project) | swift admin user
+
 ### Keystone Identity v3 accounts 
 Default endpoint http://127.0.0.1:5000/v3
 
