@@ -5,9 +5,10 @@ import datetime
 import hashlib
 import json
 import os
+import pathlib
 import random
 
-from .generate_data import create_from_lorem
+from generate_data import create_from_lorem
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
