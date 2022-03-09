@@ -131,7 +131,7 @@ def create_from_lorem(n_containers, n_objects):
                         "name": obj_name,
                         "content": lorem.get_paragraph(),
                         "meta": {
-                            "usertags": lorem.get_sentence(comma=(0, 0), word_range=(1, 4))[
+                            "usertags": lorem.get_sentence(comma=(0, 0), word_range=(4, 4))[
                                 :-1
                             ].replace(" ", ";")
                         },
@@ -148,7 +148,7 @@ def create_from_lorem(n_containers, n_objects):
                     "name": lorem.get_sentence(comma=(0, 0), word_range=(1, 3))[:-1],
                     "objects": objects,
                     "meta": {
-                        "usertags": lorem.get_sentence(comma=(0, 0), word_range=(1, 4))[
+                        "usertags": lorem.get_sentence(comma=(0, 0), word_range=(3, 3))[
                             :-1
                         ].replace(" ", ";")
                     },
