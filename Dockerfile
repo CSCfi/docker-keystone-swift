@@ -105,6 +105,7 @@ RUN         useradd -U swift \
         &&  useradd -U keystone \ 
         &&  mkdir -p "/etc/swift" "/srv/node" "/srv/node/sdb1" "/var/cache/swift" "/var/log/socklog/swift" "/var/log/swift/" "/var/run/swift" "/usr/local/src/" \
         &&  mkdir -p "/etc/keystone" "/var/log/keystone" "/var/lib/keystone" "/etc/keystone/fernet-keys/" \
+        &&  chmod 755 /usr/local/bin/generate_data.py \
 # Build swift rings
         &&  swift-ring-builder /etc/swift/object.builder create 10 1 1 \
         &&  swift-ring-builder /etc/swift/object.builder add r1z1-127.0.0.1:6200/sdb1 1 \
