@@ -51,7 +51,7 @@ def get_tempauth_token(
     host="localhost", port=8080, username="test:tester", password="testing"
 ) -> str:
     auth = requests.get(
-        f"http://{host}:{port}/auth/v1.0",
+        swift_url_template(host, port),
         headers={
             "X-Storage-User": username,
             "X-Storage-Pass": password,
@@ -69,7 +69,7 @@ def get_keystone_token(
     password="veryfast",
     project="service",
 ) -> str:
-    keystone_url = f"http://{host}:{port}/v3"
+    keystone_url = keystone_url_template(host=host, port=port)
 
     auth_data = {
         "auth": {
