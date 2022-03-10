@@ -10,12 +10,17 @@ import pathlib
 import random
 import socket
 import time
+from urllib.parse import quote
 
 import lorem
 import requests
 
 keystone_url_template = "http://{host}:{port}/v3".format
 swift_url_template = "http://{host}:{port}/auth/v1.0".format
+
+def build_path(*parts: str) -> str:
+    return "/" + "/".join(quote(part, safe="") for part in parts)
+
 
 def wait_for_port(url, timeout=5.0, verbose=False, quiet=False):
     start_time = time.perf_counter()
@@ -183,9 +188,9 @@ def populate_swift(
             headers["X-Auth-Token"] = token
             headers["Content-Type"] = "text/plain"
             r = requests.put(
-                f"{swift_url}/{container_name}/{obj_name}",
+                swift_url + build_path(container_name, f"data/{obj_name}"),
                 headers=headers,
-                files={"files": (obj["name"], obj["content"])},
+                data=obj["content"]
             )
             if r.status_code != 201:
                 print(f"ERROR {r.status_code} {obj_name}")
