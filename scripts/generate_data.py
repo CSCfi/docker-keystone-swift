@@ -120,6 +120,8 @@ def get_all_containers_obj_count(swift_url: str, token: str) -> int:
 
 
 def create_from_lorem(n_containers, n_objects):
+    n_container_tags = 3
+    n_object_tags = 4
     data = []
     container_names = set()
     while len(container_names) < n_containers:
@@ -133,25 +135,27 @@ def create_from_lorem(n_containers, n_objects):
             obj_name = lorem.get_sentence(comma=(0, 0), word_range=(1, 3)) + "txt"
             object_names.add(obj_name)
         for obj_name in object_names:
+            object_tags = set()
+            while len(object_tags) < n_object_tags:
+                object_tags.add(lorem.get_word())
             objects.append(
                 {
                     "name": obj_name,
                     "content": lorem.get_paragraph(),
                     "meta": {
-                        "usertags": lorem.get_sentence(comma=(0, 0), word_range=(4, 4))[
-                            :-1
-                        ].replace(" ", ";")
+                        "usertags": ";".join(object_tags)
                     },
                 }
             )
+        container_tags = set()
+        while len(container_tags) < n_container_tags:
+            container_tags.add(lorem.get_word())
         data.append(
             {
                 "name": cont_name,
                 "objects": objects,
                 "meta": {
-                    "usertags": lorem.get_sentence(comma=(0, 0), word_range=(3, 3))[
-                        :-1
-                    ].replace(" ", ";")
+                    "usertags": ";".join(container_tags)
                 },
             }
         )
