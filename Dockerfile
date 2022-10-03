@@ -6,10 +6,10 @@
 
 # https://releases.openstack.org/wallaby/index.html
 
-FROM        debian:11.2-slim
+FROM        debian:11.5-slim
 
 ENV         SWIFT_VERSION 2.27.0
-ENV         KEYSTONE_VERSION 19.0.0
+ENV         KEYSTONE_VERSION 19.0.1
 ENV         KEYSTONEMIDDLEWARE_VERSION 9.2.0
 ENV         SWIFTCLIENT_VERSION 3.11.1
 ENV         KEYSTONECLIENT_VERSION 4.2.0
@@ -59,10 +59,13 @@ RUN         --mount=type=cache,target=/var/cache/apt --mount=type=cache,target=/
                 rsyslog \
                 rsync \
                 procps \
+                psmisc \
                 bash \
         &&  apt-get autoremove -yq --purge
 
 # Install Keystone + swift + clients
+COPY        requirements.txt /
+
 RUN         --mount=type=cache,target=/root/.cache/pip \
             tar -C /usr/local/src/ -xf /tmp/swift-${SWIFT_VERSION}.tar.gz \
         &&  tar -C /usr/local/src/ -xf /tmp/keystone-${KEYSTONE_VERSION}.tar.gz \
@@ -77,7 +80,8 @@ RUN         --mount=type=cache,target=/root/.cache/pip \
                 /tmp/python-swiftclient-${SWIFTCLIENT_VERSION}.tar.gz \
                 /tmp/python-keystoneclient-${KEYSTONECLIENT_VERSION}.tar.gz \
                 /tmp/python-openstackclient-${OPENSTACKCLIENT_VERSION}.tar.gz \
-        &&  pip install pytz python-lorem requests \
+        &&  pip install -U pip \
+        &&  pip install -r /requirements.txt \
         &&  pip install /usr/local/src/swift-${SWIFT_VERSION}/ \
         &&  pip install /usr/local/src/keystone-${KEYSTONE_VERSION}/ \
         &&  pip install /usr/local/src/keystonemiddleware-${KEYSTONEMIDDLEWARE_VERSION}/ \
@@ -130,7 +134,6 @@ RUN         useradd -U swift \
                 --bootstrap-region-id RegionOne \
         &&  su -s /bin/sh -c "/usr/local/bin/keystone-wsgi-public -b localhost -p 5000 & sleep 3" \
 # Creating project and user
-        &&  bash -c "/usr/local/bin/keystone-wsgi-public -b localhost -p 5000 &" \
         &&  openstack user create --domain default --password veryfast swift \
         &&  openstack project create --domain default --description "Service test project" service \
         &&  openstack project create --domain default --description "Swift test project" swift-project \
