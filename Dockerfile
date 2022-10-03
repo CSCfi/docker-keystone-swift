@@ -6,10 +6,10 @@
 
 # https://releases.openstack.org/wallaby/index.html
 
-FROM        debian:11.2-slim
+FROM        debian:11.5-slim
 
 ENV         SWIFT_VERSION 2.27.0
-ENV         KEYSTONE_VERSION 19.0.0
+ENV         KEYSTONE_VERSION 19.0.1
 ENV         KEYSTONEMIDDLEWARE_VERSION 9.2.0
 ENV         SWIFTCLIENT_VERSION 3.11.1
 ENV         KEYSTONECLIENT_VERSION 4.2.0
