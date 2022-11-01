@@ -83,6 +83,7 @@ pyrsistent==0.18.1
 pysaml2==7.1.0
 python-cinderclient==8.2.0
 python-dateutil==2.8.2
+python-lorem==1.1.2  # for generating data
 python-novaclient==17.6.0
 pytz==2021.3
 PyYAML==6.0
