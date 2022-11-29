@@ -35,6 +35,8 @@ RUN         --mount=type=cache,target=/var/cache/apt,sharing=private \
                 liberasurecode-dev \
                 gcc \
                 libc6-dev \
+                libexpat1 \
+                libexpat1-dev \
         &&  apt-get autoremove -yq --purge
 
 # Install Keystone + swift + clients
