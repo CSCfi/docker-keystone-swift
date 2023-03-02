@@ -164,7 +164,7 @@ def create_from_lorem(n_containers, n_objects):
 
 
 def populate_swift(
-    swift_url: str, token: str, data: dict, verbose=False, quiet=False
+    swift_url: str, token: str, data: dict, subfolder="", verbose=False, quiet=False
 ):
     if not quiet:
         start = time.perf_counter()
@@ -185,14 +185,14 @@ def populate_swift(
         if verbose and not quiet:
             print(f"{r.status_code} {container_name}")
         for obj in container["objects"]:
-            obj_name = obj["name"]
+            obj_name = subfolder + obj["name"]
             headers = {
                 f"X-Object-Meta-{key}": item for key, item in obj["meta"].items()
             }
             headers["X-Auth-Token"] = token
             headers["Content-Type"] = "text/plain"
             r = requests.put(
-                swift_url + build_path(container_name, f"data/{obj_name}"),
+                swift_url + build_path(container_name, obj_name),
                 headers=headers,
                 data=obj["content"]
             )
@@ -209,6 +209,7 @@ def run(
     swift_url: str,
     token: str,
     json_path=None,
+    subfolder="",
     n_containers=5,
     n_objects=3,
     timeout=60,
@@ -231,7 +232,7 @@ def run(
             data = create_from_lorem(n_containers, n_objects)
 
         containers_obj_count = get_all_containers_obj_count(swift_url, token)
-        populate_swift(swift_url, token, data, verbose, quiet)
+        populate_swift(swift_url, token, data, subfolder, verbose, quiet)
 
         if verbose and not quiet:
             print()
@@ -314,6 +315,10 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
+        "--subfolder", default="", help="Prepend object names with this value"
+    )
+
+    parser.add_argument(
         "--runs",
         type=int,
         default=1,
@@ -381,6 +386,7 @@ if __name__ == "__main__":
         swift_url,
         token,
         args.from_json,
+        args.subfolder,
         args.containers,
         args.objects,
         args.timeout,

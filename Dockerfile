@@ -104,7 +104,6 @@ RUN         --mount=type=cache,target=/var/cache/apt,sharing=private \
         &&  apt-get autoremove -yq --purge
 
 COPY        docker/rootfs /
-COPY        scripts/generate_data.py /usr/local/bin/
 
 COPY        --from=builder /usr/local/bin /usr/local/bin
 COPY        --from=builder /usr/local/etc /usr/local/etc
@@ -116,7 +115,6 @@ RUN         useradd -U swift \
         &&  useradd -U keystone \ 
         &&  mkdir -p "/etc/swift" "/srv/node" "/srv/node/sdb1" "/var/cache/swift" "/var/log/socklog/swift" "/var/log/swift/" "/var/run/swift" "/usr/local/src/" \
         &&  mkdir -p "/etc/keystone" "/var/log/keystone" "/var/lib/keystone" "/etc/keystone/fernet-keys/" \
-        &&  chmod 755 /usr/local/bin/generate_data.py \
 # Build swift rings
         &&  swift-ring-builder /etc/swift/object.builder create 10 1 1 \
         &&  swift-ring-builder /etc/swift/object.builder add r1z1-127.0.0.1:6200/sdb1 1 \
@@ -152,5 +150,7 @@ RUN         useradd -U swift \
         &&  openstack endpoint create --region RegionOne object-store admin $OS_SWIFT_URL \
         &&  openstack endpoint create --region RegionOne object-store public $OS_SWIFT_URL/AUTH_%\(project_id\)s
 
+COPY        scripts/generate_data.py /usr/local/bin/
+RUN         chmod 755 /usr/local/bin/generate_data.py
 
 ENTRYPOINT  ["/init"]
