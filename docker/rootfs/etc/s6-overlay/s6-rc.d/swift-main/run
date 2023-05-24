@@ -1,0 +1,4 @@
+#!/command/with-contenv /bin/sh
+
+exec 2>&1
+exec s6-setuidgid swift swift-init main start --no-daemon

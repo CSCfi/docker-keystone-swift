@@ -1,0 +1,4 @@
+#!/command/with-contenv /bin/sh
+
+exec 2>&1
+exec s6-setuidgid keystone keystone-wsgi-public -b 0.0.0.0 -p 5000

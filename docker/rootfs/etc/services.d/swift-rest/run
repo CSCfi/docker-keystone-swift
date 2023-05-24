@@ -1,5 +1,0 @@
-#!/usr/bin/execlineb -P
-
-with-contenv
-
-exec s6-setuidgid swift /usr/local/bin/swift-init rest start --no-daemon

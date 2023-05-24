@@ -148,7 +148,7 @@ HEAD {{tmpStorageURL}}
 X-Auth-Token: {{tmpToken}}
 
 ### Read container meta
-GET {{tmpStorageURL}}/bucket-001
+GET {{tmpStorageURL}}/test-cont
 X-Auth-Token: {{tmpToken}}
 
 ### Create container
