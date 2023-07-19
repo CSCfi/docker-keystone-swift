@@ -1,15 +1,10 @@
 #!/usr/bin/env python3
 
 import argparse
-import datetime
-import hashlib
-import io
 import json
-import os
 import pathlib
-import random
-import socket
 import time
+import typing
 from urllib.parse import quote
 
 import lorem
@@ -22,13 +17,13 @@ def build_path(*parts: str) -> str:
     return "/" + "/".join(quote(part, safe="") for part in parts)
 
 
-def wait_for_port(url, timeout=5.0, verbose=False, quiet=False):
+def wait_for_port(url, timeout=5.0, verbose=False):
     start_time = time.perf_counter()
 
     while True:
         try:
             r = requests.head(url)
-            if verbose and not quiet:
+            if verbose:
                 print()
                 print(f"{url} seems to be accepting connections")
             break
@@ -42,16 +37,16 @@ def wait_for_port(url, timeout=5.0, verbose=False, quiet=False):
                 ) from ex
             time.sleep(1)
     end = time.perf_counter() - start_time
-    if end > 1 and not quiet:
+    if end > 1 and verbose:
         print(f"Waited {end} for {url}", end="\r")
         print()
 
 
 def get_tempauth_token(
     host="localhost", port=8080, username="test:tester", password="testing"
-) -> str:
+) -> typing.Tuple[str, str]:
     auth = requests.get(
-        swift_url_template(host, port),
+        swift_url_template(host=host, port=port),
         headers={
             "X-Storage-User": username,
             "X-Storage-Pass": password,
@@ -68,7 +63,7 @@ def get_keystone_token(
     username="swift",
     password="veryfast",
     project="service",
-) -> str:
+) -> typing.Tuple[str, str]:
     keystone_url = keystone_url_template(host=host, port=port)
 
     auth_data = {
@@ -119,7 +114,7 @@ def get_all_containers_obj_count(swift_url: str, token: str) -> int:
     return total
 
 
-def create_from_lorem(n_containers, n_objects):
+def create_from_lorem(n_containers, n_objects) -> list:
     n_container_tags = 3
     n_object_tags = 4
     data = []
@@ -164,9 +159,10 @@ def create_from_lorem(n_containers, n_objects):
 
 
 def populate_swift(
-    swift_url: str, token: str, data: dict, subfolder="", verbose=False, quiet=False
+    swift_url: str, token: str, data: list, subfolder="", verbose=False
 ):
-    if not quiet:
+    start: float = 0
+    if verbose:
         start = time.perf_counter()
         print()
         n_containers = len(data)
@@ -182,7 +178,7 @@ def populate_swift(
         r = requests.put(f"{swift_url}/{container_name}", headers=headers)
         if r.status_code not in {201, 202}:
             print(f"ERROR {r.status_code} {container_name}")
-        if verbose and not quiet:
+        if verbose:
             print(f"{r.status_code} {container_name}")
         for obj in container["objects"]:
             obj_name = subfolder + obj["name"]
@@ -198,9 +194,9 @@ def populate_swift(
             )
             if r.status_code != 201:
                 print(f"ERROR {r.status_code} {obj_name}")
-            if verbose and not quiet:
+            if verbose:
                 print(f"{r.status_code} {obj_name}")
-    if not quiet:
+    if verbose:
         end = time.perf_counter() - start
         print(f"Done in {end:.2f} seconds.")
 
@@ -215,8 +211,8 @@ def run(
     timeout=60,
     runs=2,
     verbose=False,
-    quiet=False,
 ):
+    data: list
     for _ in range(0, runs):
         start_timeout = time.perf_counter()
         existing_objs = get_account_obj_count(swift_url, token)
@@ -224,7 +220,7 @@ def run(
         if json_path:
             with open(json_path, "r") as fp:
                 data = json.load(fp)
-            if not quiet:
+            if verbose:
                 print(f"Populating data from {json_path}")
             n_containers = len(data)
             n_objects = len(data[0]["objects"])
@@ -232,9 +228,9 @@ def run(
             data = create_from_lorem(n_containers, n_objects)
 
         containers_obj_count = get_all_containers_obj_count(swift_url, token)
-        populate_swift(swift_url, token, data, subfolder, verbose, quiet)
+        populate_swift(swift_url, token, data, subfolder, verbose)
 
-        if verbose and not quiet:
+        if verbose:
             print()
             print("Wait until metadata updates")
 
@@ -249,7 +245,7 @@ def run(
             if obj == containers_obj_count:
                 break
             current = time.perf_counter() - start
-            if not quiet:
+            if verbose:
                 print(
                     f"Current: {obj}, expected: {expected}, started with {existing_objs}. Created {containers_obj_count - existing_objs} new objects. Waited for {current:.2f} seconds",
                     end="\r",
@@ -258,7 +254,7 @@ def run(
                 raise TimeoutError("Waited too long for metadata to update")
             time.sleep(1)
         end = time.perf_counter() - start
-        if not quiet:
+        if verbose:
             print(
                 f"We got {obj} objects, expected: {expected}, started with {existing_objs}. Created {containers_obj_count - existing_objs} new objects. Done in {end:.2f} seconds", end="\r"
             )
@@ -340,29 +336,27 @@ if __name__ == "__main__":
 
     outtput_group = parser.add_mutually_exclusive_group()
     outtput_group.add_argument(
-        "-v", "--verbose", action="store_true", help="increase output verbosity"
+        "-v", "--verbose", dest="verbosity", action="store_true", help="increase output verbosity"
     )
     outtput_group.add_argument(
-        "-q", "--quiet", action="store_true", help="Don't print to console"
+        "-q", "--quiet", dest="verbosity", action="store_false", help="Don't print to console"
     )
 
     args = parser.parse_args()
-
-    if not args.quiet:
+    total_start: float = 0
+    if args.verbosity:
         total_start = time.perf_counter()
 
     if args.keystone:
         wait_for_port(
             keystone_url_template(host=args.host, port=args.keystone_port),
             timeout=args.timeout,
-            verbose=args.verbose,
-            quiet=args.quiet,
+            verbose=args.verbosity,
         )
         wait_for_port(
             swift_url_template(host=args.host, port=args.swift_port),
             timeout=args.timeout,
-            verbose=args.verbose,
-            quiet=args.quiet,
+            verbose=args.verbosity,
         )
         swift_url, token = get_keystone_token(
             args.host, args.keystone_port, args.username, args.password, args.project
@@ -371,14 +365,13 @@ if __name__ == "__main__":
         wait_for_port(
             swift_url_template(host=args.host, port=args.swift_port),
             timeout=args.timeout,
-            verbose=args.verbose,
-            quiet=args.quiet,
+            verbose=args.verbosity,
         )
         swift_url, token = get_tempauth_token(
             args.host, args.swift_port, args.username, args.password
         )
 
-    if args.verbose and not args.quiet:
+    if args.verbosity:
         print(f"Got token: {token}. Swift url: {swift_url}")
         print(f"Generating data ...")
 
@@ -391,11 +384,10 @@ if __name__ == "__main__":
         args.objects,
         args.timeout,
         args.runs,
-        verbose=args.verbose,
-        quiet=args.quiet,
+        verbose=args.verbosity,
     )
 
-    if not args.quiet:
+    if args.verbosity:
         total_end = time.perf_counter() - total_start
         print()
         print(f"Completed in {total_end:.2f} seconds")
