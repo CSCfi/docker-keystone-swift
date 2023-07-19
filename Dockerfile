@@ -6,7 +6,7 @@
 
 # https://releases.openstack.org/wallaby/index.html
 
-FROM        python:3.9-slim as builder
+FROM        python:3.9-slim-bullseye as builder
 
 ENV         ARCH amd64
 ENV         SWIFT_VERSION 2.27.0
@@ -59,7 +59,7 @@ RUN         --mount=type=cache,target=/root/.cache/pip \
         &&  pip install /usr/local/src/python-openstackclient-${OPENSTACKCLIENT_VERSION}/
 
 
-FROM        python:3.9-slim
+FROM        python:3.9-slim-bullseye
 
 ENV         ARCH amd64
 ENV         S6_LOGGING 1
