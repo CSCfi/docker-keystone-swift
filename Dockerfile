@@ -69,7 +69,7 @@ ENV         OS_PROJECT_NAME=admin
 ENV         OS_USER_DOMAIN_NAME=Default
 ENV         OS_PROJECT_DOMAIN_NAME=Default
 ENV         OS_AUTH_URL=http://localhost:5000/v3
-ENV         OS_SWIFT_URL=http://localhost:8080/v1
+ENV         OS_SWIFT_URL=http://0.0.0.0:8080/v1
 ENV         OS_IDENTITY_API_VERSION=3
 
 # install system packages
