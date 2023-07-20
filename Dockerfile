@@ -8,13 +8,12 @@
 
 FROM        python:3.9-slim-bullseye as builder
 
-ENV         ARCH amd64
-ENV         SWIFT_VERSION 2.27.0
-ENV         KEYSTONE_VERSION 19.0.1
-ENV         KEYSTONEMIDDLEWARE_VERSION 9.2.0
-ENV         SWIFTCLIENT_VERSION 3.11.1
-ENV         KEYSTONECLIENT_VERSION 4.2.0
-ENV         OPENSTACKCLIENT_VERSION 5.5.1
+ENV         SWIFT_VERSION=2.27.0
+ENV         KEYSTONE_VERSION=19.0.1
+ENV         KEYSTONEMIDDLEWARE_VERSION=9.2.0
+ENV         SWIFTCLIENT_VERSION=3.11.1
+ENV         KEYSTONECLIENT_VERSION=4.2.0
+ENV         OPENSTACKCLIENT_VERSION=5.5.1
 
 ENV         DEBIAN_FRONTEND=noninteractive
 
@@ -61,10 +60,8 @@ RUN         --mount=type=cache,target=/root/.cache/pip \
 
 FROM        python:3.9-slim-bullseye
 
-ENV         ARCH amd64
-ENV         S6_LOGGING 1
-ENV         S6_VERSION 2.2.0.3
-ENV         SOCKLOG_VERSION 3.1.2-0
+ENV         S6_LOGGING=1
+ENV         S6_VERSION=3.1.5.0
 
 ENV         OS_USERNAME=admin
 ENV         OS_PASSWORD=superuser
@@ -75,18 +72,9 @@ ENV         OS_AUTH_URL=http://localhost:5000/v3
 ENV         OS_SWIFT_URL=http://localhost:8080/v1
 ENV         OS_IDENTITY_API_VERSION=3
 
+# install system packages
+ENV         PYTHONUNBUFFERED=1
 ENV         DEBIAN_FRONTEND=noninteractive
-
-ADD         https://github.com/just-containers/s6-overlay/releases/download/v$S6_VERSION/s6-overlay-$ARCH.tar.gz /tmp/
-ADD         https://github.com/just-containers/s6-overlay/releases/download/v$S6_VERSION/s6-overlay-$ARCH.tar.gz.sig /tmp/
-ADD         https://github.com/just-containers/socklog-overlay/releases/download/v$SOCKLOG_VERSION/socklog-overlay-$ARCH.tar.gz /tmp/
-
-
-# Install s6
-RUN         tar -C / -xf /tmp/s6-overlay-$ARCH.tar.gz \
-        &&  tar -C / -xf /tmp/socklog-overlay-$ARCH.tar.gz \
-        &&  rm -rf /tmp/s6-overlay* \
-        &&  rm -rf /tmp/socklog-overlay*
 
 RUN         rm -f /etc/apt/apt.conf.d/docker-clean; echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
 
@@ -94,16 +82,33 @@ RUN         --mount=type=cache,target=/var/cache/apt,sharing=private \
             --mount=type=cache,target=/var/lib/apt,sharing=private \
             apt-get update -q \
         &&  apt-get install -yq --no-install-recommends \
+                xz-utils \
                 liberasurecode1 \
                 memcached \
-                rsyslog \
                 rsync \
                 procps \
                 psmisc \
                 bash \
         &&  apt-get autoremove -yq --purge
 
-COPY        docker/rootfs /
+# Install s6
+ADD         https://github.com/just-containers/s6-overlay/releases/download/v$S6_VERSION/s6-overlay-noarch.tar.xz /tmp
+ADD         https://github.com/just-containers/s6-overlay/releases/download/v$S6_VERSION/s6-overlay-noarch.tar.xz.sha256 /tmp
+ADD         https://github.com/just-containers/s6-overlay/releases/download/v$S6_VERSION/s6-overlay-x86_64.tar.xz /tmp/
+ADD         https://github.com/just-containers/s6-overlay/releases/download/v$S6_VERSION/s6-overlay-x86_64.tar.xz.sha256 /tmp/
+ADD         https://github.com/just-containers/s6-overlay/releases/download/v$S6_VERSION/syslogd-overlay-noarch.tar.xz /tmp/
+ADD         https://github.com/just-containers/s6-overlay/releases/download/v$S6_VERSION/syslogd-overlay-noarch.tar.xz.sha256 /tmp/
+
+RUN         cd /tmp \
+        &&  sha256sum -c *.sha256 \
+        &&  tar -C / -Jxpf /tmp/s6-overlay-x86_64.tar.xz \
+        &&  tar -C / -Jxpf /tmp/s6-overlay-noarch.tar.xz \
+        &&  tar -C / -Jxpf /tmp/syslogd-overlay-noarch.tar.xz \
+        &&  rm -rf /tmp/s6-overlay* \
+        &&  rm -rf /tmp/syslogd*
+
+# copy files
+COPY        --chmod=755 docker/rootfs /
 
 COPY        --from=builder /usr/local/bin /usr/local/bin
 COPY        --from=builder /usr/local/etc /usr/local/etc
@@ -113,8 +118,10 @@ COPY        --from=builder /usr/local/lib /usr/local/lib
 # Prepare
 RUN         useradd -U swift \ 
         &&  useradd -U keystone \ 
-        &&  mkdir -p "/etc/swift" "/srv/node" "/srv/node/sdb1" "/var/cache/swift" "/var/log/socklog/swift" "/var/log/swift/" "/var/run/swift" "/usr/local/src/" \
-        &&  mkdir -p "/etc/keystone" "/var/log/keystone" "/var/lib/keystone" "/etc/keystone/fernet-keys/" \
+        &&  useradd -U syslog \ 
+        &&  useradd -U sysllog \ 
+        &&  mkdir -p "/etc/swift" "/srv/node" "/srv/node/sdb1" "/var/cache/swift" "/var/run/swift" "/usr/local/src/" \
+        &&  mkdir -p "/etc/keystone" "/var/lib/keystone" "/etc/keystone/fernet-keys/" \
 # Build swift rings
         &&  swift-ring-builder /etc/swift/object.builder create 10 1 1 \
         &&  swift-ring-builder /etc/swift/object.builder add r1z1-127.0.0.1:6200/sdb1 1 \
@@ -125,10 +132,11 @@ RUN         useradd -U swift \
         &&  swift-ring-builder /etc/swift/account.builder create 10 1 1 \
         &&  swift-ring-builder /etc/swift/account.builder add r1z1-127.0.0.1:6202/sdb1 1 \
         &&  swift-ring-builder /etc/swift/account.builder rebalance \
-        &&  chown -R swift:swift "/etc/swift" "/srv/node" "/srv/node/sdb1" "/var/cache/swift" "/var/log/socklog/swift" "/var/log/swift/" "/var/run/swift" "/usr/local/src/" \
+        &&  chown -R swift:swift "/etc/swift" "/srv/node" "/srv/node/sdb1" "/var/cache/swift" "/var/run/swift" "/usr/local/src/" \
 # Setup Keystone
         &&  touch /var/lib/keystone/keystone.db \
-        &&  chown -R keystone:keystone  "/etc/keystone" "/var/log/keystone" "/var/lib/keystone" "/etc/keystone/fernet-keys/" \
+        &&  chown -R keystone:keystone  "/etc/keystone" "/var/lib/keystone" "/etc/keystone/fernet-keys/" \
+        &&  chmod -R 750  "/etc/keystone" "/var/lib/keystone" "/etc/keystone/fernet-keys/" \
         &&  su -s /bin/sh -c "keystone-manage db_sync" keystone \
         &&  keystone-manage fernet_setup --keystone-user keystone --keystone-group keystone \
         &&  keystone-manage credential_setup --keystone-user keystone --keystone-group keystone \
