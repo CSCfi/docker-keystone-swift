@@ -97,7 +97,7 @@ simplejson==3.17.6
 six==1.16.0
 SQLAlchemy==1.4.31
 sqlalchemy-migrate==0.13.0
-sqlparse==0.4.2
+sqlparse==0.4.4
 statsd==3.3.0
 stevedore==3.5.0
 Tempita==0.5.2
