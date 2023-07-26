@@ -38,7 +38,7 @@ jsonschema==4.4.0
 keystoneauth1==4.4.0
 kombu==5.2.3
 lxml==4.8.0
-Mako==1.1.6
+Mako==1.2.2
 MarkupSafe==2.1.0
 msgpack==1.0.3
 munch==2.5.0
