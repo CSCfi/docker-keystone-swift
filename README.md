@@ -118,6 +118,57 @@ TempAuth
 
     curl -H 'X-Storage-User: test:tester' -H 'X-Storage-Pass: testing' http://127.0.0.1:8080/auth/v1.0
 
+## S3 API
+
+This image also comes with S3 API enabled. To use it, generate credentials and use them to authenticate against the S3 API. 
+Below is an example using the credentials with [`s3cmd`](https://github.com/s3tools/s3cmd).
+
+The swift <-> S3 compatibility has its [limitations described here](https://opendev.org/openstack/swift/src/branch/stable/wallaby/doc/source/s3_compat.rst).
+
+1. Create credentials
+```bash
+$ docker exec -it <image-id> bash
+$ openstack ec2 credentials create
++------------+---------------------------------------------------------------------------------------------------------------------------------+
+| Field      | Value                                                                                                                           |
++------------+---------------------------------------------------------------------------------------------------------------------------------+
+| access     | 0a09f306baa04358aa88e50c4853329f                                                                                                |
+| links      | {'self': 'http://localhost:5000/v3/users/2855fdd6794e4d38b4e14b036094524f/credentials/OS-EC2/0a09f306baa04358aa88e50c4853329f'} |
+| project_id | 3ec1214fab494db0b8e2fb4e8f16b42a                                                                                                |
+| secret     | b15fdf7a8ed947f7afe6fa3b01a376cc                                                                                                |
+| trust_id   | None                                                                                                                            |
+| user_id    | 2855fdd6794e4d38b4e14b036094524f                                                                                                |
++------------+---------------------------------------------------------------------------------------------------------------------------------+
+
+```
+2. Create s3 config file
+```bash
+cat > s3.cfg << EOF
+[default]
+access_key = 0a09f306baa04358aa88e50c4853329f
+secret_key = b15fdf7a8ed947f7afe6fa3b01a376cc
+host_base = 127.0.0.1:8080
+host_bucket = 127.0.0.1:8080
+use_https = false
+
+EOF
+```
+3. Use s3cmd
+```bash
+# create a bucket
+$ s3cmd -c s3.cfg mb s3://config
+Bucket 's3://config/' created
+
+# upload the config file
+$ s3cmd -c s3.cfg put s3.cfg s3://config/s3.cfg 
+upload: 's3.cfg' -> 's3://config/s3.cfg'  [1 of 1]
+ 176 of 176   100% in    0s     3.33 KB/s  done
+
+# list all objects
+$ s3cmd -c s3.cfg la
+2023-12-11 18:23          176  s3://config/s3.cfg
+```
+
 # License
 
 `docker-keystone-swift` and all it sources are released under MIT License.
