@@ -167,3 +167,21 @@ let's do it!
 GET {{tmpStorageURL}}/test-cont/test-file-2
 X-Auth-Token: {{tmpToken}}
 
+### S3 API - creating and listing credentials
+@userId = {{scopedToken.response.body.token.user.id}}
+@projectId = {{scopedToken.response.body.token.project.id}}
+
+### Create S3 credentials with scoped authorization
+# @name s3TokenRequest
+POST {{keystone}}/v3/users/{{userId}}/credentials/OS-EC2
+X-Auth-Token: {{authTokenScoped}}
+content-type: application/json
+
+{
+  "tenant_id": "{{projectId}}"
+}
+
+
+### Get list of available credentials
+GET {{keystone}}/v3/users/{{userId}}/credentials/OS-EC2
+X-Auth-Token: {{authTokenScoped}}
