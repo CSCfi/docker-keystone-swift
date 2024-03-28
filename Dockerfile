@@ -6,6 +6,8 @@
 
 # https://releases.openstack.org/wallaby/index.html
 
+ARG         ARCHITECTURE=x86_64
+
 FROM        python:3.9-slim-bullseye as builder
 
 ENV         SWIFT_VERSION=2.27.0
@@ -60,6 +62,8 @@ RUN         --mount=type=cache,target=/root/.cache/pip \
 
 FROM        python:3.9-slim-bullseye
 
+ARG         ARCHITECTURE
+
 ENV         S6_LOGGING=1
 ENV         S6_VERSION=3.1.5.0
 
@@ -94,14 +98,14 @@ RUN         --mount=type=cache,target=/var/cache/apt,sharing=private \
 # Install s6
 ADD         https://github.com/just-containers/s6-overlay/releases/download/v$S6_VERSION/s6-overlay-noarch.tar.xz /tmp
 ADD         https://github.com/just-containers/s6-overlay/releases/download/v$S6_VERSION/s6-overlay-noarch.tar.xz.sha256 /tmp
-ADD         https://github.com/just-containers/s6-overlay/releases/download/v$S6_VERSION/s6-overlay-x86_64.tar.xz /tmp/
-ADD         https://github.com/just-containers/s6-overlay/releases/download/v$S6_VERSION/s6-overlay-x86_64.tar.xz.sha256 /tmp/
+ADD         https://github.com/just-containers/s6-overlay/releases/download/v$S6_VERSION/s6-overlay-${ARCHITECTURE}.tar.xz /tmp/
+ADD         https://github.com/just-containers/s6-overlay/releases/download/v$S6_VERSION/s6-overlay-${ARCHITECTURE}.tar.xz.sha256 /tmp/
 ADD         https://github.com/just-containers/s6-overlay/releases/download/v$S6_VERSION/syslogd-overlay-noarch.tar.xz /tmp/
 ADD         https://github.com/just-containers/s6-overlay/releases/download/v$S6_VERSION/syslogd-overlay-noarch.tar.xz.sha256 /tmp/
 
 RUN         cd /tmp \
         &&  sha256sum -c *.sha256 \
-        &&  tar -C / -Jxpf /tmp/s6-overlay-x86_64.tar.xz \
+        &&  tar -C / -Jxpf /tmp/s6-overlay-${ARCHITECTURE}.tar.xz \
         &&  tar -C / -Jxpf /tmp/s6-overlay-noarch.tar.xz \
         &&  tar -C / -Jxpf /tmp/syslogd-overlay-noarch.tar.xz \
         &&  rm -rf /tmp/s6-overlay* \
@@ -116,10 +120,10 @@ COPY        --from=builder /usr/local/include /usr/local/include
 COPY        --from=builder /usr/local/lib /usr/local/lib
 
 # Prepare
-RUN         useradd -U swift \ 
-        &&  useradd -U keystone \ 
-        &&  useradd -U syslog \ 
-        &&  useradd -U sysllog \ 
+RUN         useradd -U swift \
+        &&  useradd -U keystone \
+        &&  useradd -U syslog \
+        &&  useradd -U sysllog \
         &&  mkdir -p "/etc/swift" "/srv/node" "/srv/node/sdb1" "/var/cache/swift" "/var/run/swift" "/usr/local/src/" \
         &&  mkdir -p "/etc/keystone" "/var/lib/keystone" "/etc/keystone/fernet-keys/" \
 # Build swift rings
