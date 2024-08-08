@@ -20,14 +20,12 @@ jobs:
         run: |
           echo "REPO=${GITHUB_REPOSITORY,,}" >>${GITHUB_ENV}
       - name: Delete 'PR' containers older than a week
-        uses: snok/container-retention-policy@v2.2.1
+        uses: snok/container-retention-policy@v3.0.0
         with:
-          image-names: ${{ env.REGISTRY }}/${{ env.REPO }}
-          filter-tags: sha-*,sha256:*
-          skip-tags: latest
-          cut-off: A week ago UTC
-          account-type: org
-          org-name: ${{ github.repository_owner }}
-          keep-at-least: 1
-          token: ${{ secrets.GH_REPO_TOKEN }}
+          image-names: ${{ env.REPO }}
+          image-tags: "sha-* sha256:* !latest"
+          cut-off: 1w
+          account: ${{ github.repository_owner }}
+          keep-n-most-recent: 1
+          token: ${{ secrets.GITHUB_TOKEN }}
           timestamp-to-use: updated_at

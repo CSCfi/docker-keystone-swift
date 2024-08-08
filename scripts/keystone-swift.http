@@ -7,7 +7,7 @@
 @keystone = http://localhost:5000
 @username = swift
 @password = veryfast
-@project = service
+@project = b769b1918c8e4eabaf2198ccda2eda13
 
 @authToken = {{unscopedToken.response.headers.X-Subject-Token}}
 @authTokenScoped = {{tokenScoped.response.headers.X-Subject-Token}}
@@ -52,7 +52,7 @@ content-type: application/json
     },
     "scope": {
       "project": {
-        "name": "{{project}}",
+        "id": "{{project}}",
         "domain": { "id": "default" }
       }
     }
@@ -74,7 +74,7 @@ content-type: application/json
     },
     "scope": {
       "project": {
-        "name": "{{project}}",
+        "id": "{{project}}",
         "domain": { "id": "default" }
       }
     }
