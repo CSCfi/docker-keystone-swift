@@ -89,6 +89,7 @@ RUN         --mount=type=cache,target=/var/cache/apt,sharing=private \
                 procps \
                 psmisc \
                 bash \
+                curl \
         &&  apt-get autoremove -yq --purge
 
 # Install s6
