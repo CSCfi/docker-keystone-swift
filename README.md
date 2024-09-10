@@ -22,6 +22,10 @@ Build the image with
 
     docker buildx build -t keystone-swift .
 
+Or for using arm processor architecture, like for Mac's M1.
+
+    docker buildx build --build-arg="ARCHITECTURE=aarch64" -t keystone-swift .
+
 Start the container using the following command:
 
     docker run -d --init -p 5000:5000 -p 8080:8080 --name keystone-swift keystone-swift
