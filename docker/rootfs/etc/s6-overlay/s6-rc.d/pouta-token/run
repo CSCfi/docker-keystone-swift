@@ -1,0 +1,62 @@
+#!/usr/bin/env python3
+
+from flask import Flask, request, jsonify
+from urllib.parse import urlparse
+
+import os
+import requests
+
+keystone_url = os.environ.get("OS_AUTH_URL", "http://127.0.0.1:5000/v3")
+keystone_port = urlparse(keystone_url).port
+
+app = Flask(__name__)
+
+
+@app.route('/', defaults={'path': ''})
+@app.route("/<string:path>")
+@app.route('/<path:path>', methods=["GET", "POST", "PUT", "DELETE"])
+def proxy(path):
+    url = f'http://localhost:{keystone_port}/{path}'
+
+    response = requests.request(
+        method=request.method,
+        url=url,
+        headers=request.headers,
+        data=request.get_data(),
+        allow_redirects=True
+    )
+
+    return (response.content, response.status_code, response.headers.items())
+
+
+@app.route('/v3/OS-FEDERATION/identity_providers/oauth2_authentication/protocols/openid/auth', methods=['GET'])
+def pouta_to_unscoped():
+    pouta_token = ""
+    auth_header = request.headers.get('Authorization')
+    if auth_header:
+        pouta_token = auth_header.split(" ")[1]
+
+    auth_data = {
+        "auth": {
+            "identity": {
+                "methods": [
+                    "token"
+                ],
+                "token": {
+                    "id": pouta_token
+                }
+            }
+        }
+    }
+
+    target_url = keystone_url+'/auth/tokens'
+    headers = {'Content-Type': 'application/json'}
+
+    # Forward to Keystone which should return an unscoped token
+    response = requests.post(target_url, json=auth_data, headers=headers)
+
+    return (response.content, response.status_code, response.headers.items())
+
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5001)

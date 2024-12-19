@@ -1,7 +1,7 @@
 # Openstack swift and keystone container image
 
 This container makes it easy to run *integration tests* against OpenStack Keystone and OpenStack Swift object storage.
-It is not suitable for production. 
+It is not suitable for production.
 
 The container starts both a swift and a keystone service so that integration
 tests can run against a single Docker container.
@@ -16,6 +16,9 @@ This container is based on `python:3.9-slim` and installs tarballs from
 [OpenStack release Wallaby](https://docs.openstack.org/wallaby/install/).
 Furthermore, the image includes [s6-overlay](https://github.com/just-containers/s6-overlay)
 to manage processes.
+
+## Pouta Access Token
+A python script is added to mock the feature in Pouta in which a token from AAI's userinfo can be exchanged for an unscoped token that works with Openstack Keystone. The python server is running in port 5001 and also proxies all other requests to port 5000, meaning all Keystone endpoints work in port 5001 as well.
 
 ## How to use this container
 Build the image with
@@ -58,7 +61,7 @@ The container comes with 2 preconfigured projects:
 - service (Service test project) | swift admin user
 - swift-project (Swift test project) | swift admin user
 
-### Keystone Identity v3 accounts 
+### Keystone Identity v3 accounts
 Default endpoint http://127.0.0.1:5000/v3
 
 #### Administrative account
@@ -106,7 +109,7 @@ Keystone Identity v3
 
 TempAuth
 
-    http http://127.0.0.1:8080/auth/v1.0 X-Storage-User:test:tester X-Storage-Pass:testing 
+    http http://127.0.0.1:8080/auth/v1.0 X-Storage-User:test:tester X-Storage-Pass:testing
 
 ## Sample curl commands
 
@@ -120,7 +123,7 @@ TempAuth
 
 ## S3 API
 
-This image also comes with S3 API enabled. To use it, generate credentials and use them to authenticate against the S3 API. 
+This image also comes with S3 API enabled. To use it, generate credentials and use them to authenticate against the S3 API.
 Below is an example using the credentials with [`s3cmd`](https://github.com/s3tools/s3cmd).
 
 The swift <-> S3 compatibility has its [limitations described here](https://opendev.org/openstack/swift/src/branch/stable/wallaby/doc/source/s3_compat.rst).
@@ -160,7 +163,7 @@ $ s3cmd -c s3.cfg mb s3://config
 Bucket 's3://config/' created
 
 # upload the config file
-$ s3cmd -c s3.cfg put s3.cfg s3://config/s3.cfg 
+$ s3cmd -c s3.cfg put s3.cfg s3://config/s3.cfg
 upload: 's3.cfg' -> 's3://config/s3.cfg'  [1 of 1]
  176 of 176   100% in    0s     3.33 KB/s  done
 
