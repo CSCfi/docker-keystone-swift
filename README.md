@@ -130,7 +130,7 @@ TempAuth
 This image also comes with S3 API enabled. To use it, generate credentials and use them to authenticate against the S3 API.
 Below is an example using the credentials with [`s3cmd`](https://github.com/s3tools/s3cmd).
 
-The swift <-> S3 compatibility has its [limitations described here](https://opendev.org/openstack/swift/src/branch/stable/wallaby/doc/source/s3_compat.rst).
+The swift <-> S3 compatibility has its [limitations described here](https://opendev.org/openstack/swift/src/branch/unmaintained/wallaby/doc/source/s3_compat.rst).
 
 1. Create credentials
 ```bash
