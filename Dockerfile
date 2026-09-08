@@ -8,8 +8,6 @@
 
 # https://releases.openstack.org/
 
-ARG         ARCHITECTURE=x86_64
-
 FROM        python:3.12.14-slim-trixie AS builder
 
 ENV         DEBIAN_FRONTEND=noninteractive
@@ -37,7 +35,14 @@ RUN         --mount=type=cache,target=/root/.cache/pip \
 
 FROM        python:3.12.14-slim-trixie
 
-ARG         ARCHITECTURE
+# TARGETARCH is populated automatically by buildx from the build/target
+# platform (e.g. "amd64", "arm64") -- no --build-arg needed, and it stays
+# correct under --platform linux/amd64,linux/arm64 multi-arch builds too.
+# s6-overlay names its release assets by its own arch scheme (x86_64/aarch64),
+# not Docker's, so remap via chained ARG pattern-substitution.
+ARG         TARGETARCH
+ARG         S6_ARCH=${TARGETARCH/arm64/aarch64}
+ARG         S6_ARCH=${S6_ARCH/amd64/x86_64}
 
 ENV         S6_LOGGING=1
 ENV         S6_VERSION=3.2.1.0
@@ -74,14 +79,14 @@ RUN         --mount=type=cache,target=/var/cache/apt,sharing=private \
 # Install s6
 ADD         https://github.com/just-containers/s6-overlay/releases/download/v$S6_VERSION/s6-overlay-noarch.tar.xz /tmp
 ADD         https://github.com/just-containers/s6-overlay/releases/download/v$S6_VERSION/s6-overlay-noarch.tar.xz.sha256 /tmp
-ADD         https://github.com/just-containers/s6-overlay/releases/download/v$S6_VERSION/s6-overlay-${ARCHITECTURE}.tar.xz /tmp/
-ADD         https://github.com/just-containers/s6-overlay/releases/download/v$S6_VERSION/s6-overlay-${ARCHITECTURE}.tar.xz.sha256 /tmp/
+ADD         https://github.com/just-containers/s6-overlay/releases/download/v$S6_VERSION/s6-overlay-${S6_ARCH}.tar.xz /tmp/
+ADD         https://github.com/just-containers/s6-overlay/releases/download/v$S6_VERSION/s6-overlay-${S6_ARCH}.tar.xz.sha256 /tmp/
 ADD         https://github.com/just-containers/s6-overlay/releases/download/v$S6_VERSION/syslogd-overlay-noarch.tar.xz /tmp/
 ADD         https://github.com/just-containers/s6-overlay/releases/download/v$S6_VERSION/syslogd-overlay-noarch.tar.xz.sha256 /tmp/
 
 RUN         cd /tmp \
         &&  sha256sum -c *.sha256 \
-        &&  tar -C / -Jxpf /tmp/s6-overlay-${ARCHITECTURE}.tar.xz \
+        &&  tar -C / -Jxpf /tmp/s6-overlay-${S6_ARCH}.tar.xz \
         &&  tar -C / -Jxpf /tmp/s6-overlay-noarch.tar.xz \
         &&  tar -C / -Jxpf /tmp/syslogd-overlay-noarch.tar.xz \
         &&  rm -rf /tmp/s6-overlay* \

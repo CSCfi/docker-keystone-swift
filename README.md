@@ -25,9 +25,8 @@ Build the image with
 
     docker buildx build -t keystone-swift .
 
-Or for using arm processor architecture, like for Mac's M1.
-
-    docker buildx build --build-arg="ARCHITECTURE=aarch64" -t keystone-swift .
+This works on both amd64 and arm64 (e.g. Apple Silicon) as-is -- buildx detects
+the target architecture automatically, no build arg needed.
 
 Start the container using the following command:
 
