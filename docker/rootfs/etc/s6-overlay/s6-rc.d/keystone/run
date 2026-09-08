@@ -1,4 +1,12 @@
 #!/command/with-contenv /bin/sh
 
 exec 2>&1
-exec s6-setuidgid keystone keystone-wsgi-public -b 0.0.0.0 -p 5000
+# keystone-wsgi-public was removed in keystone 2025.2; keystone now expects the
+# deployer to run its own WSGI server against the keystone.wsgi.api:application
+# module-level WSGI callable. See https://docs.openstack.org/releasenotes/keystone/2025.2.html
+#
+# gunicorn must run with NO CLI arguments -- see
+# /etc/gunicorn/gunicorn.conf.py for why (it's auto-discovered via cwd,
+# and MUST be named exactly "gunicorn.conf.py" for that discovery to work).
+cd /etc/gunicorn
+exec s6-setuidgid keystone gunicorn

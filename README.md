@@ -12,13 +12,13 @@ This image was created as a combination of other existing approaches, none of wh
 - [jeantil/openstack-swift-keystone-docker](https://github.com/jeantil/openstack-swift-keystone-docker)
 
 ## Stack
-This container is based on `python:3.9-slim` and installs tarballs from
-[OpenStack release Wallaby](https://docs.openstack.org/wallaby/install/).
-Furthermore, the image includes [s6-overlay](https://github.com/just-containers/s6-overlay)
+This container is based on `python:3.12.14-slim-trixie` and installs Keystone, Swift, and their
+clients straight from PyPI (see `requirements.txt` for exact
+pins). Furthermore, the image includes [s6-overlay](https://github.com/just-containers/s6-overlay)
 to manage processes.
 
 ## Pouta Access Token
-A python script is added to mock the feature in Pouta in which a token from AAI's userinfo can be exchanged for an unscoped token that works with Openstack Keystone. The python server is running in port 5001 and also proxies all other requests to port 5000, meaning all Keystone endpoints work in port 5001 as well.
+A python script is added to mock the feature in Pouta in which a token from AAI's userinfo can be exchanged for an unscoped token that works with Openstack Keystone. The Python server is running in port 5001 and also proxies all other requests to port 5000, meaning all Keystone endpoints work in port 5001 as well.
 
 ## How to use this container
 Build the image with
@@ -130,7 +130,7 @@ TempAuth
 This image also comes with S3 API enabled. To use it, generate credentials and use them to authenticate against the S3 API.
 Below is an example using the credentials with [`s3cmd`](https://github.com/s3tools/s3cmd).
 
-The swift <-> S3 compatibility has its [limitations described here](https://opendev.org/openstack/swift/src/branch/stable/wallaby/doc/source/s3_compat.rst).
+The swift <-> S3 compatibility has its [limitations described here](https://docs.openstack.org/swift/latest/s3_compat.html).
 
 1. Create credentials
 ```bash
