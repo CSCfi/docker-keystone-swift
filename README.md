@@ -12,10 +12,10 @@ This image was created as a combination of other existing approaches, none of wh
 - [jeantil/openstack-swift-keystone-docker](https://github.com/jeantil/openstack-swift-keystone-docker)
 
 ## Stack
-This container is based on `python:3.12.14-slim-trixie` and installs Keystone, Swift, and their
-clients straight from PyPI (see `requirements.txt` for exact
-pins). Furthermore, the image includes [s6-overlay](https://github.com/just-containers/s6-overlay)
-to manage processes.
+This container is based on `python:3.14.7-slim-trixie` and installs Keystone, Swift, and their
+clients straight from PyPI via [uv](https://docs.astral.sh/uv/) (see `pyproject.toml` for the
+direct dependencies and `uv.lock` for the exact resolved pins). Furthermore, the image includes
+[s6-overlay](https://github.com/just-containers/s6-overlay) to manage processes.
 
 ## Pouta Access Token
 A python script is added to mock the feature in Pouta in which a token from AAI's userinfo can be exchanged for an unscoped token that works with Openstack Keystone. The Python server is running in port 5001 and also proxies all other requests to port 5000, meaning all Keystone endpoints work in port 5001 as well.

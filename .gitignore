@@ -1,3 +1,5 @@
 .vscode
+.venv
 .python-version
+.env
 *.json

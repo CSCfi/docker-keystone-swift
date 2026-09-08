@@ -8,9 +8,16 @@
 
 # https://releases.openstack.org/
 
-FROM        python:3.14.7-slim-trixie AS builder
+FROM        ghcr.io/astral-sh/uv:0.12.9-python3.14-trixie-slim AS builder
+ARG         UV_DEFAULT_INDEX=
+ARG         UV_INDEX_ARTIFACTORY_USERNAME=
+ENV         UV_DEFAULT_INDEX=$UV_DEFAULT_INDEX
+ENV         UV_INDEX_ARTIFACTORY_USERNAME=$UV_INDEX_ARTIFACTORY_USERNAME
 
 ENV         DEBIAN_FRONTEND=noninteractive
+
+ENV         UV_LINK_MODE=copy
+ENV         UV_PYTHON_DOWNLOADS=never
 
 RUN         rm -f /etc/apt/apt.conf.d/docker-clean; echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
 
@@ -25,12 +32,17 @@ RUN         --mount=type=cache,target=/var/cache/apt,sharing=private \
                 libexpat1-dev \
         &&  apt-get autoremove -yq --purge
 
-# Install Keystone + swift + clients, all from PyPI in one resolution pass
-COPY        requirements.txt /usr/local/src/
+# Install Keystone + swift + clients into a project-local venv, resolved
+# from pyproject.toml + uv.lock. To regenerate the lock (e.g. after bumping
+# a version in pyproject.toml's dependencies), just run `uv lock`
+WORKDIR     /app
 
-RUN         --mount=type=cache,target=/root/.cache/pip \
-            pip install -U pip \
-        &&  pip install -r /usr/local/src/requirements.txt
+RUN         --mount=type=secret,id=artifactory_token \
+            --mount=type=cache,target=/root/.cache/uv \
+            --mount=type=bind,source=uv.lock,target=uv.lock \
+            --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+            UV_INDEX_ARTIFACTORY_PASSWORD=$(cat /run/secrets/artifactory_token) \
+            uv sync --locked --no-install-project
 
 
 FROM        python:3.14.7-slim-trixie
@@ -59,6 +71,9 @@ ENV         OS_IDENTITY_API_VERSION=3
 # install system packages
 ENV         PYTHONUNBUFFERED=1
 ENV         DEBIAN_FRONTEND=noninteractive
+
+ENV         VIRTUAL_ENV=/app/.venv
+ENV         PATH=/app/.venv/bin:$PATH
 
 RUN         rm -f /etc/apt/apt.conf.d/docker-clean; echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
 
@@ -95,10 +110,7 @@ RUN         cd /tmp \
 # copy files
 COPY        --chmod=755 docker/rootfs /
 
-COPY        --from=builder /usr/local/bin /usr/local/bin
-COPY        --from=builder /usr/local/etc /usr/local/etc
-COPY        --from=builder /usr/local/include /usr/local/include
-COPY        --from=builder /usr/local/lib /usr/local/lib
+COPY        --from=builder /app/.venv /app/.venv
 
 # Prepare
 RUN         useradd -U swift \
