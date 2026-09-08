@@ -8,7 +8,7 @@
 
 # https://releases.openstack.org/
 
-FROM        python:3.12.14-slim-trixie AS builder
+FROM        python:3.14.7-slim-trixie AS builder
 
 ENV         DEBIAN_FRONTEND=noninteractive
 
@@ -33,7 +33,7 @@ RUN         --mount=type=cache,target=/root/.cache/pip \
         &&  pip install -r /usr/local/src/requirements.txt
 
 
-FROM        python:3.12.14-slim-trixie
+FROM        python:3.14.7-slim-trixie
 
 # TARGETARCH is populated automatically by buildx from the build/target
 # platform (e.g. "amd64", "arm64") -- no --build-arg needed, and it stays
