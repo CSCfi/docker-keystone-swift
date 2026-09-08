@@ -8,7 +8,7 @@ import os
 import pathlib
 import random
 
-from generate_data import create_from_lorem
+from generate_data import create_fake_data
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -29,7 +29,7 @@ if __name__ == "__main__":
     n_containers = args.containers
     n_objects = args.objects
 
-    data = create_from_lorem(n_containers, n_objects)
+    data = create_fake_data(n_containers, n_objects)
 
     if (args.output):
         filename = args.output
