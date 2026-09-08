@@ -31,11 +31,11 @@ Or for using arm processor architecture, like for Mac's M1.
 
 Start the container using the following command:
 
-    docker run -d --init -p 5000:5000 -p 8080:8080 --name keystone-swift keystone-swift
+    docker run -d -p 5000:5000 -p 8080:8080 --name keystone-swift keystone-swift
 
 Or use the built images from ghrc.io
 
-    docker run -d --init -p 5000:5000 -p 8080:8080 --name keystone-swift ghcr.io/cscfi/docker-keystone-swift:latest
+    docker run -d -p 5000:5000 -p 8080:8080 --name keystone-swift ghcr.io/cscfi/docker-keystone-swift:latest
 
 Stop it with
 
@@ -43,7 +43,7 @@ Stop it with
 
 By default, the image outputs no logs, but you can pass `S6_LOGGING=0` when running the image so that it sends logs to stdout
 
-    docker run -d --init -p 5000:5000 -p 8080:8080 --env S6_LOGGING=0 --name keystone-swift keystone-swift
+    docker run -d -p 5000:5000 -p 8080:8080 --env S6_LOGGING=0 --name keystone-swift keystone-swift
 
 
 The following commands are available in the container:
