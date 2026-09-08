@@ -8,7 +8,10 @@
 
 # https://releases.openstack.org/
 
-FROM        ghcr.io/astral-sh/uv:0.12.9-python3.14-trixie-slim AS builder
+ARG ARTIFACTORY_SERVER=
+ARG ARTIFACTORY_SERVER_GHCR=
+
+FROM        ${ARTIFACTORY_SERVER_GHCR}astral-sh/uv:0.12.9-python3.14-trixie-slim AS builder
 ARG         UV_DEFAULT_INDEX=
 ARG         UV_INDEX_ARTIFACTORY_USERNAME=
 ENV         UV_DEFAULT_INDEX=$UV_DEFAULT_INDEX
@@ -45,7 +48,7 @@ RUN         --mount=type=secret,id=artifactory_token \
             uv sync --locked --no-install-project
 
 
-FROM        python:3.14.7-slim-trixie
+FROM        ${ARTIFACTORY_SERVER}python:3.14.7-slim-trixie
 
 # TARGETARCH is populated automatically by buildx from the build/target
 # platform (e.g. "amd64", "arm64") -- no --build-arg needed, and it stays
