@@ -3,63 +3,89 @@
 This container makes it easy to run *integration tests* against OpenStack Keystone and OpenStack Swift object storage.
 It is not suitable for production.
 
-The container starts both a swift and a keystone service so that integration
-tests can run against a single Docker container.
+The container starts both a swift and a keystone service so that integration tests can run against a single Docker container. The project's [Dockerfile](Dockerfile) is compatible with both amd64 and arm64 as BuildKit detects the target architecture automatically.
 
-This image was created as a combination of other existing approaches, none of which served our needs:
-- [Dockerfile from swift](https://github.com/openstack/swift)
-- [dockerswiftaio/docker-swift](https://github.com/NVIDIA/docker-swift)
-- [jeantil/openstack-swift-keystone-docker](https://github.com/jeantil/openstack-swift-keystone-docker)
-
-## Stack
-This container is based on `python:3.14.7-slim-trixie` and installs Keystone, Swift, and their
-clients straight from PyPI via [uv](https://docs.astral.sh/uv/) (see `pyproject.toml` for the
-direct dependencies and `uv.lock` for the exact resolved pins). Furthermore, the image includes
-[s6-overlay](https://github.com/just-containers/s6-overlay) to manage processes.
-
-## Pouta Access Token
-A python script is added to mock the feature in Pouta in which a token from AAI's userinfo can be exchanged for an unscoped token that works with Openstack Keystone. The Python server is running in port 5001 and also proxies all other requests to port 5000, meaning all Keystone endpoints work in port 5001 as well.
-
-## How to use this container
-Build the image with
-
-    docker buildx build -t keystone-swift .
-
-This works on both amd64 and arm64 (e.g. Apple Silicon) as-is -- buildx detects
-the target architecture automatically, no build arg needed.
-
-Start the container using the following command:
-
-    docker run -d -p 5000:5000 -p 8080:8080 --name keystone-swift keystone-swift
-
-Or use the built images from ghrc.io
-
-    docker run -d -p 5000:5000 -p 8080:8080 --name keystone-swift ghcr.io/cscfi/docker-keystone-swift:latest
-
-Stop it with
-
-    docker stop keystone-swift
-
-By default, the image outputs no logs, but you can pass `S6_LOGGING=0` when running the image so that it sends logs to stdout
-
-    docker run -d -p 5000:5000 -p 8080:8080 --env S6_LOGGING=0 --name keystone-swift keystone-swift
-
-
-The following commands are available in the container:
+The following commands are available in the resulting container:
 - openstack
 - keystone
 - swift
 - bash
 
-## Extras
+This image also comes with S3 API enabled. Swift and S3 have some compatibility issues, which are [described here](https://docs.openstack.org/swift/latest/s3_compat.html).
+
+This project was created as a combination of other existing approaches, none of which served our needs:
+- [Dockerfile from swift](https://github.com/openstack/swift)
+- [dockerswiftaio/docker-swift](https://github.com/NVIDIA/docker-swift)
+- [jeantil/openstack-swift-keystone-docker](https://github.com/jeantil/openstack-swift-keystone-docker)
+
+## 🏃 Build and Run
+<details><summary>Click to expand</summary>
+
+### Prerequisites
+
+- Docker
+- [Vault CLI](https://developer.hashicorp.com/vault/install) if you are a member of SDD CSC
+
+### Stack
+
+This container is based on `python:3.14.7-slim-trixie` and installs Keystone, Swift, and their
+clients straight from PyPI via [uv](https://docs.astral.sh/uv/) (see `pyproject.toml` for the
+direct dependencies and `uv.lock` for the exact resolved pins). Furthermore, the image includes
+[s6-overlay](https://github.com/just-containers/s6-overlay) to manage processes.
+
+### How to use this container
+
+The main users of this repository are assumed to be the group members of SDD CSC. If you do not belong to this group, go to [Using public sources](#using-public-sources).
+
+The [Dockerfile](Dockerfile) uses Artifactory as the source for both Docker images and Python dependencies. Therefore, before you can build the Docker image, you must first log in to Vault and two Artifactory Docker registries. The easiest way to authenticate against these is to use the accompanying [Makefile](Makefile). By running
+
+```sh
+make all
+```
+
+you will be first asked to log in to Vault to get the necessary secrets, and then asked to log in to the Docker registries in Artifactory. Use the external password for Vault and the internal password for Artifactory. After fetching secrets and logging in to Artifactory, the Makefile target `all` builds a `keystone-swift` Docker image and runs it in the background.
+
+To run any of these steps individually, the Makefile offers targets `setup`, `build`, and `run`. To stop the image, run
+
+```sh
+make stop
+```
+
+#### Using public sources
+
+If you do not have access to SDD Vault, you can instead run Makefile target
+
+```sh
+make all_public
+```
+
+This target first regenerates the [uv.lock](uv.lock) file, since the file contains links to CSC Artifactory, and then builds the Docker container and runs it in the background.
+
+To see all available targets, run `make help`.
+
+### Logging
+
+Service logs are sent to stdout by default. To silence them, pass `S6_LOGGING=1` when running
+the container, e.g.
+
+    docker run -d -p 5000:5000 -p 8080:8080 --env S6_LOGGING=1 --name keystone-swift keystone-swift
+
+Note that `make run` does not forward this variable, so use `docker run` directly if you need to
+change it.
+
+</details>
+
+## 📚 Usage
+<details><summary>Click to expand</summary>
+
 Use the scripts to generate data into the object storage, and test the endpoints.
 
-## Preconfigured credentials
+### Preconfigured credentials
 The container comes with 2 preconfigured accounts:
 - admin / superuser
 - swift / veryfast
 
-## Preconfigured projects
+### Preconfigured projects
 The container comes with 2 preconfigured projects:
 - service (Service test project) | swift admin user
 - swift-project (Swift test project) | swift admin user
@@ -103,8 +129,7 @@ Default endpoint http://127.0.0.1:8080/auth/v1.0
     PASSWORD=testing
     TENANT_NAME=test
 
-
-## Sample httpie commands
+### Sample httpie commands
 
 Keystone Identity v3
 
@@ -114,7 +139,7 @@ TempAuth
 
     http http://127.0.0.1:8080/auth/v1.0 X-Storage-User:test:tester X-Storage-Pass:testing
 
-## Sample curl commands
+### Sample curl commands
 
 Keystone Identity v3
 
@@ -124,12 +149,10 @@ TempAuth
 
     curl -H 'X-Storage-User: test:tester' -H 'X-Storage-Pass: testing' http://127.0.0.1:8080/auth/v1.0
 
-## S3 API
+### S3 API
 
-This image also comes with S3 API enabled. To use it, generate credentials and use them to authenticate against the S3 API.
+To use S3, generate credentials and use them to authenticate against the S3 API.
 Below is an example using the credentials with [`s3cmd`](https://github.com/s3tools/s3cmd).
-
-The swift <-> S3 compatibility has its [limitations described here](https://docs.openstack.org/swift/latest/s3_compat.html).
 
 1. Create credentials
 ```bash
@@ -175,6 +198,15 @@ $ s3cmd -c s3.cfg la
 2023-12-11 18:23          176  s3://config/s3.cfg
 ```
 
-# License
+### Pouta Access Token
+A Python script has been added to mock the feature in Pouta in which a token from SDS AAI's userinfo can be exchanged for an unscoped token that works with OpenStack Keystone. The Python server is running in port 5001 and also proxies all other requests to port 5000, meaning all Keystone endpoints work in port 5001 as well.
 
-`docker-keystone-swift` and all it sources are released under MIT License.
+</details>
+
+## 📜 License
+
+<details><summary>Click to expand</summary>
+
+`docker-keystone-swift` and all its sources are released under `MIT`, see [LICENSE](LICENSE).
+
+</details>

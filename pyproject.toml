@@ -1,6 +1,6 @@
 [project]
 name = "docker-keystone-swift"
-dynamic = ["version"]
+version = "2026.9.0"
 description = "OpenStack Keystone + Swift all-in-one test image -- dependency manifest for the Dockerfile build (not a real installable package)."
 license = "MIT"
 requires-python = "==3.14.*"
