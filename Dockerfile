@@ -9,7 +9,7 @@
 # https://releases.openstack.org/
 
 ARG ARTIFACTORY_SERVER=
-ARG ARTIFACTORY_SERVER_GHCR=
+ARG ARTIFACTORY_SERVER_GHCR=ghcr.io/
 
 FROM        ${ARTIFACTORY_SERVER_GHCR}astral-sh/uv:0.12.9-python3.14-trixie-slim AS builder
 ARG         UV_DEFAULT_INDEX=

@@ -18,7 +18,9 @@ help:
 
 all: setup build run ## Fetch secrets from Vault, and build and run image
 
-build: ## Build Docker image
+all_public: build_public run ## Build and run image if you do not have access to Vault or Artifactory
+
+build: ## Build Docker image using the secrets from Vault
 	@docker buildx build \
 	--build-arg ARTIFACTORY_SERVER=$(ARTIFACTORY_SERVER)/ \
 	--build-arg ARTIFACTORY_SERVER_GHCR=$(ARTIFACTORY_SERVER_GHCR)/ \
@@ -26,6 +28,15 @@ build: ## Build Docker image
 	--build-arg UV_INDEX_ARTIFACTORY_USERNAME=$(ARTIFACTORY_READ_ONLY_USER) \
 	--secret id=artifactory_token,env=ARTIFACTORY_PYPI_TOKEN \
 	-t keystone-swift .
+
+build_public: ## Build without using Artifactory. This will regenerate the uv.lock file using public registries
+	@rm -f uv.lock
+	@docker run --rm \
+    -v $(CURDIR)/pyproject.toml:/app/pyproject.toml -w /app \
+    ghcr.io/astral-sh/uv:0.12.9-python3.14-trixie-slim \
+    /bin/bash -c "set -e && uv lock && cat uv.lock" > uv.lock.tmp
+	@mv uv.lock.tmp uv.lock
+	@docker buildx build -t keystone-swift .
 
 run: stop ## Run Docker image
 	@docker run -d -p 5000:5000 -p 8080:8080 --name keystone-swift keystone-swift
