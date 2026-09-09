@@ -59,7 +59,7 @@ ARG         TARGETARCH
 ARG         S6_ARCH=${TARGETARCH/arm64/aarch64}
 ARG         S6_ARCH=${S6_ARCH/amd64/x86_64}
 
-ENV         S6_LOGGING=1
+ENV         S6_LOGGING=0
 ENV         S6_VERSION=3.2.1.0
 
 ENV         OS_USERNAME=admin
