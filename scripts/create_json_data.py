@@ -1,12 +1,8 @@
 #!/usr/bin/env python3
 
 import argparse
-import datetime
-import hashlib
 import json
-import os
 import pathlib
-import random
 
 from generate_data import create_fake_data
 
@@ -33,9 +29,9 @@ if __name__ == "__main__":
 
     if (args.output):
         filename = args.output
-    else: 
+    else:
         filename = f"swift_data_{args.containers}_cont_{args.objects}_objs.json"
-    
+
     with open(filename, "w") as fp:
         json.dump(data, fp, indent=2)
 
