@@ -1,5 +1,4 @@
 SHELL := /bin/bash
-MAKEFLAGS += --no-print-directory --always-make
 
 -include .env
 export
@@ -12,15 +11,19 @@ endef
 
 # Default target
 # Print list of available targets. Only rows in the format `target: ## description` are printed
+.PHONY: help
 help:
 	@echo "Available targets:"
 	@awk '/^[a-zA-Z0-9_-]+:.*?## / {printf "  %-20s %s\n", $$1, substr($$0, index($$0, "##") + 3)}' $(MAKEFILE_LIST)
 
+.PHONY: all
 all: setup build run ## Fetch secrets from Vault, and build and run image
 
+.PHONY: all_public
 all_public: build_public run ## Build and run image if you do not have access to Vault or Artifactory
 
-build: ## Build Docker image using the secrets from Vault
+.PHONY: build
+build: .env ## Build Docker image using the secrets from Vault
 	@docker buildx build \
 	--build-arg ARTIFACTORY_SERVER=$(ARTIFACTORY_SERVER)/ \
 	--build-arg ARTIFACTORY_SERVER_GHCR=$(ARTIFACTORY_SERVER_GHCR)/ \
@@ -29,27 +32,44 @@ build: ## Build Docker image using the secrets from Vault
 	--secret id=artifactory_token,env=ARTIFACTORY_PYPI_TOKEN \
 	-t keystone-swift .
 
-build_public: ## Build without using Artifactory. This will regenerate the uv.lock file using public registries
+.PHONY: build_public
+build_public: lock_public ## Build without using Artifactory. This will regenerate the uv.lock file using public registries
+	@docker buildx build -t keystone-swift .
+	@git restore uv.lock
+
+.PHONY: lock
+lock: .env ## Regenerate uv.lock file using Artifactory
+	@docker run --rm \
+	-v $(CURDIR):/app -w /app \
+	--env UV_DEFAULT_INDEX="artifactory=$(ARTIFACTORY_PYPI_REGISTRY)/simple" \
+	--env UV_INDEX_ARTIFACTORY_USERNAME=$(ARTIFACTORY_READ_ONLY_USER) \
+	--env UV_INDEX_ARTIFACTORY_PASSWORD=$(ARTIFACTORY_PYPI_TOKEN) \
+	$(ARTIFACTORY_SERVER_GHCR)/astral-sh/uv:0.12.9-python3.14-trixie-slim \
+	uv lock
+
+.PHONY: lock_public
+lock_public: ## Regenerate uv.lock file without using Artifactory
 	@rm -f uv.lock
 	@docker run --rm \
-    -v $(CURDIR)/pyproject.toml:/app/pyproject.toml -w /app \
+    -v $(CURDIR):/app -w /app \
     ghcr.io/astral-sh/uv:0.12.9-python3.14-trixie-slim \
-    /bin/bash -c "set -e && uv lock && cat uv.lock" > uv.lock.tmp
-	@mv uv.lock.tmp uv.lock
-	@docker buildx build -t keystone-swift .
+    uv lock
 
+.PHONY: run
 run: stop ## Run Docker image
 	@docker run -d -p 5000:5000 -p 8080:8080 --name keystone-swift keystone-swift
 
-setup: get_env ## Get secrets from Vault and login to Artifactory registries
+.PHONY: setup
+setup: .env ## Get secrets from Vault and login to Artifactory registries
 	docker login $(ARTIFACTORY_SERVER)
 	docker login $(ARTIFACTORY_SERVER_GHCR)
 
+.PHONY: stop
 stop: ## Stop and remove Docker image
 	@docker stop keystone-swift 2> /dev/null || true
 	@docker rm -f keystone-swift 2> /dev/null || true
 
-get_env: ## Get secrets from Vault for building image
+.env: ## Get secrets from Vault for building image
 	@vault -v > /dev/null 2>&1 || { echo "⚠️  \033[31;1mVault CLI is not installed\033[0m ⚠️"; exit 1; }
 	@rm -f .env
 	@export VAULT_TOKEN=$$(vault login -method=oidc -token-only); \
