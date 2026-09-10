@@ -367,23 +367,27 @@ name = "docker-keystone-swift"
 version = "2026.9.0"
 source = { virtual = "." }
 dependencies = [
+    { name = "faker" },
     { name = "gunicorn" },
     { name = "keystone" },
     { name = "keystonemiddleware" },
     { name = "python-keystoneclient" },
     { name = "python-openstackclient" },
     { name = "python-swiftclient" },
+    { name = "requests" },
     { name = "swift" },
 ]
 
 [package.metadata]
 requires-dist = [
+    { name = "faker", specifier = "==40.38.0" },
     { name = "gunicorn", specifier = "==26.2.0" },
     { name = "keystone", specifier = "==29.1.0" },
     { name = "keystonemiddleware", specifier = "==13.0.1" },
     { name = "python-keystoneclient", specifier = "==6.0.0" },
     { name = "python-openstackclient", specifier = "==10.3.0" },
     { name = "python-swiftclient", specifier = "==4.11.0" },
+    { name = "requests", specifier = "==2.34.2" },
     { name = "swift", specifier = "==2.38.1" },
 ]
 
@@ -420,6 +424,18 @@ dependencies = [
 sdist = { url = "https://artifactory.ci.csc.fi/artifactory/api/pypi/sds-pypi/packages/packages/eb/e8/6a3a23a3b85ed129b21309c6eca873d833855e63879cd72b9dac20d9b76a/eventlet-0.41.2.tar.gz", hash = "sha256:721b86b77fca33a735598292022ac6feef99747bf48f52defdada6b572acd5af" }
 wheels = [
     { url = "https://artifactory.ci.csc.fi/artifactory/api/pypi/sds-pypi/packages/packages/23/75/9681fa59c4b27d9e34e8be682d2fff3f5be87bf6552477f9a5d395a068c3/eventlet-0.41.2-py3-none-any.whl", hash = "sha256:6cae50e67fe6ae8bb7013e7fd4d8e0d0d20aeb9b3259b93f023c93eb6749631f" },
+]
+
+[[package]]
+name = "faker"
+version = "40.38.0"
+source = { registry = "https://artifactory.ci.csc.fi/artifactory/api/pypi/sds-pypi/simple" }
+dependencies = [
+    { name = "tzdata", marker = "sys_platform == 'win32'" },
+]
+sdist = { url = "https://artifactory.ci.csc.fi/artifactory/api/pypi/sds-pypi/packages/packages/f2/55/baeae0ecb04ef56c92d6ac1ef7b3b965af0502ac9863fc85db7afc0884fd/faker-40.38.0.tar.gz", hash = "sha256:72e421098664edf38478f4269a5d5a539337de5da18883ce67cb1e6bb96b0b3a" }
+wheels = [
+    { url = "https://artifactory.ci.csc.fi/artifactory/api/pypi/sds-pypi/packages/packages/f1/b8/48cb8733de8448023983f64e81d7f731ce1459c21e93b9b29657e5c48cab/faker-40.38.0-py3-none-any.whl", hash = "sha256:69927515d61759c8a257540b8a91891cd622ba1c24a386b62a0a777e44ba46a9" },
 ]
 
 [[package]]
