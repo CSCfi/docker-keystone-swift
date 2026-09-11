@@ -3,12 +3,15 @@
 import argparse
 import json
 import pathlib
+import random
 import time
 import typing
 from urllib.parse import quote
 
-import lorem
 import requests
+from faker import Faker
+
+fake = Faker()
 
 keystone_url_template = "http://{host}:{port}/v3".format
 swift_url_template = "http://{host}:{port}/auth/v1.0".format
@@ -114,29 +117,34 @@ def get_all_containers_obj_count(swift_url: str, token: str) -> int:
     return total
 
 
-def create_from_lorem(n_containers, n_objects) -> list:
+def _short_sentence() -> str:
+    # 1-3 words, capitalized, ending in a period -- mirrors lorem.get_sentence(word_range=(1, 3))
+    return fake.sentence(nb_words=random.randint(1, 3), variable_nb_words=False)
+
+
+def create_fake_data(n_containers, n_objects) -> list:
     n_container_tags = 3
     n_object_tags = 4
     data = []
     container_names = set()
     while len(container_names) < n_containers:
-        cont_name = lorem.get_sentence(comma=(0, 0), word_range=(1, 3))[:-1]
+        cont_name = _short_sentence()[:-1]
         container_names.add(cont_name)
 
     for cont_name in container_names:
         objects = []
         object_names = set()
         while len(object_names) < n_objects:
-            obj_name = lorem.get_sentence(comma=(0, 0), word_range=(1, 3)) + "txt"
+            obj_name = _short_sentence() + "txt"
             object_names.add(obj_name)
         for obj_name in object_names:
             object_tags = set()
             while len(object_tags) < n_object_tags:
-                object_tags.add(lorem.get_word())
+                object_tags.add(fake.word())
             objects.append(
                 {
                     "name": obj_name,
-                    "content": lorem.get_paragraph(),
+                    "content": fake.paragraph(),
                     "meta": {
                         "usertags": ";".join(object_tags)
                     },
@@ -144,7 +152,7 @@ def create_from_lorem(n_containers, n_objects) -> list:
             )
         container_tags = set()
         while len(container_tags) < n_container_tags:
-            container_tags.add(lorem.get_word())
+            container_tags.add(fake.word())
         data.append(
             {
                 "name": cont_name,
@@ -225,7 +233,7 @@ def run(
             n_containers = len(data)
             n_objects = len(data[0]["objects"])
         else:
-            data = create_from_lorem(n_containers, n_objects)
+            data = create_fake_data(n_containers, n_objects)
 
         containers_obj_count = get_all_containers_obj_count(swift_url, token)
         populate_swift(swift_url, token, data, subfolder, verbose)

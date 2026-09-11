@@ -1,0 +1,23 @@
+[project]
+name = "docker-keystone-swift"
+version = "2026.9.0"
+description = "OpenStack Keystone + Swift all-in-one test image -- dependency manifest for the Dockerfile build (not a real installable package)."
+license = "MIT"
+requires-python = "==3.14.*"
+dependencies = [
+    "keystone==29.1.0",
+    "swift==2.38.1",
+    "keystonemiddleware==13.0.1",
+    "python-swiftclient==4.11.0",
+    "python-keystoneclient==6.0.0",
+    "python-openstackclient==10.3.0",
+    "gunicorn==26.2.0",
+    "requests==2.34.2",
+    "Faker==40.38.0"
+]
+
+[tool.uv]
+package = false
+override-dependencies = [
+    "pyopenssl>=24.0.0"
+]
