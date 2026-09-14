@@ -1,0 +1,94 @@
+stages:
+  - build
+  - scan
+  - push
+  - release
+
+include:
+  - project: 'sds-dev/releases'
+    ref: main
+    file: 'releases.yml'
+
+default:
+  image: "${ARTIFACTORY_SERVER}/sds/sdd-common-ci:2026.9.3"
+
+variables:
+  REGISTRY_IMAGE: "${CONTAINER_REGISTRY_ADDRESS}/sds/${CI_PROJECT_NAME}"
+
+build-image:
+  stage: build
+  rules:
+    # We build images for tags and MRs
+    - if: $CI_COMMIT_TAG
+      variables:
+        VERSION: $CI_COMMIT_TAG
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      variables:
+        VERSION: $CI_COMMIT_REF_SLUG
+  tags:
+    - sds-build
+  before_script:
+    - echo "UV_INDEX_ARTIFACTORY_USERNAME=${UV_INDEX_ARTIFACTORY_USERNAME}" > .env
+    - echo "UV_INDEX_ARTIFACTORY_PASSWORD=${UV_INDEX_ARTIFACTORY_PASSWORD}" >> .env
+  script:
+    - echo "Building version ${VERSION}"
+    - > 
+      docker buildx build
+      --build-arg ARTIFACTORY_SERVER="${ARTIFACTORY_SERVER}" 
+      --build-arg ARTIFACTORY_SERVER_GHCR="${ARTIFACTORY_SERVER_GHCR}"
+      --build-arg UV_DEFAULT_INDEX="${UV_DEFAULT_INDEX}"
+      --secret id=vault_secrets,src=.env
+      --iidfile iid.out
+      -t "${REGISTRY_IMAGE}:${VERSION}" .
+    # Save digest as a dotenv artifact
+    - echo "IMAGE_DIGEST=$(cat iid.out)" >> build.env
+  artifacts:
+    reports:
+      dotenv: build.env
+
+scan-image:
+  stage: scan
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $GITLAB_USER_NAME != "renovate-bot"'
+      variables:
+        WATCH: sds-watch
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $GITLAB_USER_NAME == "renovate-bot"'
+      variables:
+        WATCH: sds-renovate
+  tags:
+    - sds-test
+  before_script:
+    - jf config import "${JF_CONFIG_READ_ONLY}"
+  script:
+    - docker pull "${REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}@${IMAGE_DIGEST}"
+    - docker tag "${REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}@${IMAGE_DIGEST}" "${REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}"
+    - jf docker scan --extended-table --watches=$WATCH "${REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}"
+
+push-image:
+  stage: push
+  rules:
+    - if: $CI_COMMIT_TAG
+  tags:
+    - sds-upload
+  variables:
+    JFROG_CLI_BUILD_NAME: $CI_PROJECT_NAME
+    JFROG_CLI_BUILD_NUMBER: $CI_COMMIT_TAG
+    JFROG_CLI_BUILD_PROJECT: sds
+  before_script:
+    - jf config import "${JF_CONFIG}"
+  script:
+    - echo "Pushing $CI_COMMIT_TAG image to Artifactory"
+    - docker pull "${REGISTRY_IMAGE}:${CI_COMMIT_TAG}@${IMAGE_DIGEST}"
+    - docker tag "${REGISTRY_IMAGE}:${CI_COMMIT_TAG}@${IMAGE_DIGEST}" "${ARTIFACTORY_IMAGE}:${CI_COMMIT_TAG}"
+    - jf docker push "${ARTIFACTORY_IMAGE}:${CI_COMMIT_TAG}"
+    - jf rt build-publish
+
+release-job:
+  extends: .automated-release
+  release:
+    description: $(cat release_changes.md)
+    assets:
+      links:
+        - name: "${ARTIFACTORY_SERVER}/sds/${CI_PROJECT_NAME}:${RELEASE_VERSION}"
+          url: "https://${ARTIFACTORY_SERVER}/artifactory/sds-docker/sds/${CI_PROJECT_NAME}/${RELEASE_VERSION}"
+          link_type: image

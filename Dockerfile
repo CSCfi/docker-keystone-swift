@@ -8,8 +8,8 @@
 
 # https://releases.openstack.org/
 
-ARG ARTIFACTORY_SERVER=docker.io
-ARG ARTIFACTORY_SERVER_GHCR=ghcr.io
+ARG         ARTIFACTORY_SERVER=docker.io
+ARG         ARTIFACTORY_SERVER_GHCR=ghcr.io
 
 FROM        ${ARTIFACTORY_SERVER_GHCR}/astral-sh/uv:0.12.9-python3.14-trixie-slim AS builder
 ARG         UV_DEFAULT_INDEX=
@@ -40,12 +40,12 @@ RUN         --mount=type=cache,target=/var/cache/apt,sharing=private \
 # a version in pyproject.toml's dependencies), just run `uv lock`
 WORKDIR     /app
 
-RUN         --mount=type=secret,id=artifactory_token \
+RUN         --mount=type=secret,id=vault_secrets \
             --mount=type=cache,target=/root/.cache/uv \
             --mount=type=bind,source=uv.lock,target=uv.lock \
             --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
-            UV_INDEX_ARTIFACTORY_PASSWORD=$(cat /run/secrets/artifactory_token) \
-            uv sync --locked --no-install-project
+            set -a && . /run/secrets/vault_secrets && set +a \
+        &&  uv sync --locked --no-install-project
 
 
 FROM        ${ARTIFACTORY_SERVER}/python:3.14.7-slim-trixie

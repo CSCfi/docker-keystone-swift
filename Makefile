@@ -26,8 +26,7 @@ build: .env ## Build Docker image using the secrets from Vault
 	--build-arg ARTIFACTORY_SERVER=$$ARTIFACTORY_SERVER \
 	--build-arg ARTIFACTORY_SERVER_GHCR=$$ARTIFACTORY_SERVER_GHCR \
 	--build-arg UV_DEFAULT_INDEX="artifactory=$${ARTIFACTORY_PYPI_REGISTRY}/simple" \
-	--build-arg UV_INDEX_ARTIFACTORY_USERNAME=$$ARTIFACTORY_READ_ONLY_USER \
-	--secret id=artifactory_token,env=ARTIFACTORY_PYPI_TOKEN \
+	--secret id=vault_secrets,src=.env \
 	-t keystone-swift .
 
 .PHONY: build_public
@@ -41,8 +40,6 @@ lock: .env ## Regenerate uv.lock file using Artifactory
 	docker run --rm \
 	-v $(CURDIR):/app -w /app \
 	--env UV_DEFAULT_INDEX="artifactory=$${ARTIFACTORY_PYPI_REGISTRY}/simple" \
-	--env UV_INDEX_ARTIFACTORY_USERNAME=$$ARTIFACTORY_READ_ONLY_USER \
-	--env UV_INDEX_ARTIFACTORY_PASSWORD=$$ARTIFACTORY_PYPI_TOKEN \
 	$${ARTIFACTORY_SERVER_GHCR}/astral-sh/uv:0.12.9-python3.14-trixie-slim \
 	uv lock
 
@@ -60,7 +57,7 @@ run: stop ## Run Docker image
 
 .PHONY: setup
 setup: .env ## Get secrets from Vault and login to Artifactory registries
-	@set -a; . ./.env; set +a; \
+	set -a; . ./.env; set +a; \
 	docker login $$ARTIFACTORY_SERVER && \
 	docker login $$ARTIFACTORY_SERVER_GHCR
 
@@ -74,7 +71,7 @@ stop: ## Stop and remove Docker image
 	@export VAULT_TOKEN=$$(vault login -method=oidc -token-only); \
 	$(call write_secret,ARTIFACTORY_SERVER,internal-urls,artifactory-docker) \
 	$(call write_secret,ARTIFACTORY_SERVER_GHCR,internal-urls,artifactory-ghcr) \
-	$(call write_secret,ARTIFACTORY_READ_ONLY_USER,robots/artifactory-read-only,username) \
 	$(call write_secret,ARTIFACTORY_PYPI_REGISTRY,artifactory,pypi-registry) \
-	$(call write_secret,ARTIFACTORY_PYPI_TOKEN,artifactory,pypi-token)
+	$(call write_secret,UV_INDEX_ARTIFACTORY_USERNAME,robots/artifactory-read-only,username) \
+	$(call write_secret,UV_INDEX_ARTIFACTORY_PASSWORD,artifactory,pypi-token)
 	@echo "Secrets written successfully"
