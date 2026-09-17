@@ -32,9 +32,9 @@ build-image:
     - echo "UV_INDEX_ARTIFACTORY_PASSWORD=${UV_INDEX_ARTIFACTORY_PASSWORD}" >> .env
   script:
     - echo "Building version ${VERSION}"
-    - > 
+    - >
       docker buildx build
-      --build-arg ARTIFACTORY_SERVER="${ARTIFACTORY_SERVER}" 
+      --build-arg ARTIFACTORY_SERVER="${ARTIFACTORY_SERVER}"
       --build-arg ARTIFACTORY_SERVER_GHCR="${ARTIFACTORY_SERVER_GHCR}"
       --build-arg UV_DEFAULT_INDEX="${UV_DEFAULT_INDEX}"
       --secret id=vault_secrets,src=.env
