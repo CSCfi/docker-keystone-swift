@@ -70,7 +70,7 @@ scan-image:
     - docker tag "${REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}@${IMAGE_DIGEST}" "${REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}"
     - jf docker scan --extended-table --watches=$WATCH "${REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}"
 
-push-image:
+1-push-jfrog-image:
   stage: push
   rules:
     - if: $CI_COMMIT_TAG
@@ -91,6 +91,37 @@ push-image:
     - echo "${ARTIFACTORY_SERVER}/sds/${CI_PROJECT_NAME}:${CI_COMMIT_TAG}@${IMAGE_DIGEST}" > image-file.txt
     - jf rt bdc sds-docker --image-file image-file.txt
     - jf rt bp
+
+2-upload-ghcr-image:
+  stage: push
+  tags:
+    - sds-upload
+  rules:
+    - if: '$CI_COMMIT_TAG'
+  variables:
+    DOCKER_CONFIG: "$CI_PROJECT_DIR/.docker"
+  script:
+    - |
+      # Pull image from our container registry
+      docker pull "${REGISTRY_IMAGE}:${CI_COMMIT_TAG}@${IMAGE_DIGEST}"
+
+      # Login to GitHub Container Registry
+      mkdir -p "$DOCKER_CONFIG"
+      echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USERNAME" --password-stdin
+
+      # Tag the image for GHCR
+      docker tag "${REGISTRY_IMAGE}:${CI_COMMIT_TAG}@${IMAGE_DIGEST}" ghcr.io/cscfi/${CI_PROJECT_NAME}:latest
+      docker tag "${REGISTRY_IMAGE}:${CI_COMMIT_TAG}@${IMAGE_DIGEST}" ghcr.io/cscfi/${CI_PROJECT_NAME}:$CI_COMMIT_SHA
+      docker tag "${REGISTRY_IMAGE}:${CI_COMMIT_TAG}@${IMAGE_DIGEST}" ghcr.io/cscfi/${CI_PROJECT_NAME}:$CI_COMMIT_TAG
+
+      # Push to GHCR
+      echo "Pushing images ghcr.io/cscfi/${CI_PROJECT_NAME}:latest"
+      docker push ghcr.io/cscfi/${CI_PROJECT_NAME}:latest
+      echo "Pushing image ghcr.io/cscfi/${CI_PROJECT_NAME}:$CI_COMMIT_SHA"
+      docker push ghcr.io/cscfi/${CI_PROJECT_NAME}:$CI_COMMIT_SHA
+      echo "Pushing image ghcr.io/cscfi/${CI_PROJECT_NAME}:$CI_COMMIT_TAG"
+      docker push ghcr.io/cscfi/${CI_PROJECT_NAME}:$CI_COMMIT_TAG
+
 
 release-job:
   extends: .automated-release
