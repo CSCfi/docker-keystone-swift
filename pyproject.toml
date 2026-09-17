@@ -19,7 +19,7 @@ dependencies = [
 [tool.uv]
 package = false
 override-dependencies = [
-    "pyopenssl>=24.0.0",
+    "pyopenssl>=24.0.0,<24.3.0",
     "pyjwt>=2.14.0"
 ]
 
