@@ -92,6 +92,8 @@ RUN         --mount=type=cache,target=/var/cache/apt,sharing=private \
                 psmisc \
                 bash \
                 curl \
+        # To fix vulnerabilities
+        &&  apt-get install --only-upgrade -yqq libc6 libc-bin \
         &&  apt-get autoremove -yq --purge
 
 # Install s6
