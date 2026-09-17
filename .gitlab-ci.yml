@@ -14,6 +14,16 @@ default:
 
 variables:
   REGISTRY_IMAGE: "${CONTAINER_REGISTRY_ADDRESS}/sds/${CI_PROJECT_NAME}"
+  BUILDER_NAME: kwystone-swift-container-builder
+  BUILDX_ARGS: >
+    --no-cache
+    --builder $BUILDER_NAME
+    --platform linux/amd64,linux/arm64
+    --build-arg ARTIFACTORY_SERVER=$ARTIFACTORY_SERVER
+    --build-arg ARTIFACTORY_SERVER_GHCR=$ARTIFACTORY_SERVER_GHCR
+    --build-arg UV_DEFAULT_INDEX=$UV_DEFAULT_INDEX
+    --secret id=vault_secrets,src=.env
+    --iidfile iid.out
 
 build-image:
   stage: build
@@ -30,16 +40,12 @@ build-image:
   before_script:
     - echo "UV_INDEX_ARTIFACTORY_USERNAME=${UV_INDEX_ARTIFACTORY_USERNAME}" > .env
     - echo "UV_INDEX_ARTIFACTORY_PASSWORD=${UV_INDEX_ARTIFACTORY_PASSWORD}" >> .env
+    - >
+      docker buildx inspect $BUILDER_NAME >/dev/null 2>&1 ||
+      docker buildx create --name $BUILDER_NAME --driver docker-container --bootstrap
   script:
     - echo "Building version ${VERSION}"
-    - >
-      docker buildx build
-      --build-arg ARTIFACTORY_SERVER="${ARTIFACTORY_SERVER}"
-      --build-arg ARTIFACTORY_SERVER_GHCR="${ARTIFACTORY_SERVER_GHCR}"
-      --build-arg UV_DEFAULT_INDEX="${UV_DEFAULT_INDEX}"
-      --secret id=vault_secrets,src=.env
-      --iidfile iid.out
-      -t "${REGISTRY_IMAGE}:${VERSION}" .
+    - docker buildx build $BUILDX_ARGS --push -t "${REGISTRY_IMAGE}:${VERSION}" .
     # Save digest as a dotenv artifact
     - echo "IMAGE_DIGEST=$(cat iid.out)" >> build.env
   artifacts:
@@ -78,10 +84,13 @@ push-image:
     - jf config import "${JF_CONFIG}"
   script:
     - echo "Pushing $CI_COMMIT_TAG image to Artifactory"
-    - docker pull "${REGISTRY_IMAGE}:${CI_COMMIT_TAG}@${IMAGE_DIGEST}"
-    - docker tag "${REGISTRY_IMAGE}:${CI_COMMIT_TAG}@${IMAGE_DIGEST}" "${ARTIFACTORY_IMAGE}:${CI_COMMIT_TAG}"
-    - jf docker push "${ARTIFACTORY_IMAGE}:${CI_COMMIT_TAG}"
-    - jf rt build-publish
+    - >
+      jf docker buildx imagetools create
+      --tag "${ARTIFACTORY_SERVER}/sds/${CI_PROJECT_NAME}:${CI_COMMIT_TAG}"
+      "${REGISTRY_IMAGE}:${CI_COMMIT_TAG}@${IMAGE_DIGEST}"
+    - echo "${ARTIFACTORY_SERVER}/sds/${CI_PROJECT_NAME}:${CI_COMMIT_TAG}@${IMAGE_DIGEST}" > image-file.txt
+    - jf rt bdc sds-docker --image-file image-file.txt
+    - jf rt bp
 
 release-job:
   extends: .automated-release
