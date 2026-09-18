@@ -10,7 +10,7 @@ include:
     file: 'releases.yml'
 
 default:
-  image: "${ARTIFACTORY_SERVER}/sds/sdd-common-ci:2026.9.3"
+  image: "${ARTIFACTORY_SERVER}/sds/sdd-common-ci:2026.9.3@sha256:f4e479e35c1155e8422bec6d23315f5e6fae997188c6d41076600a6804ab9089"
 
 variables:
   REGISTRY_IMAGE: "${CONTAINER_REGISTRY_ADDRESS}/sds/${CI_PROJECT_NAME}"

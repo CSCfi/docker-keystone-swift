@@ -11,7 +11,7 @@
 ARG         ARTIFACTORY_SERVER=docker.io
 ARG         ARTIFACTORY_SERVER_GHCR=ghcr.io
 
-FROM        ${ARTIFACTORY_SERVER_GHCR}/astral-sh/uv:0.12.9-python3.14-trixie-slim AS builder
+FROM        ${ARTIFACTORY_SERVER_GHCR}/astral-sh/uv:0.12.9-python3.14-trixie-slim@sha256:534fc12aa1797528813e0528cb1963550aebb613ac0879e2120fca63522655b2 AS builder
 ARG         UV_DEFAULT_INDEX=
 ARG         UV_INDEX_ARTIFACTORY_USERNAME=
 ENV         UV_DEFAULT_INDEX=$UV_DEFAULT_INDEX
@@ -48,7 +48,7 @@ RUN         --mount=type=secret,id=vault_secrets \
         &&  uv sync --locked --no-install-project
 
 
-FROM        ${ARTIFACTORY_SERVER}/python:3.14.7-slim-trixie
+FROM        ${ARTIFACTORY_SERVER}/python:3.14.7-slim-trixie@sha256:cad9a2c871761c413caa6fdd6441c783451e740a48aaeba60ae62a8b53525ef6
 
 # TARGETARCH is populated automatically by buildx from the build/target
 # platform (e.g. "amd64", "arm64") -- no --build-arg needed, and it stays
