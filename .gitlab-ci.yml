@@ -13,7 +13,6 @@ default:
   image: "${ARTIFACTORY_SERVER}/sds/sdd-common-ci:2026.9.3@sha256:f4e479e35c1155e8422bec6d23315f5e6fae997188c6d41076600a6804ab9089"
 
 variables:
-  REGISTRY_IMAGE: "${CONTAINER_REGISTRY_ADDRESS}/sds/${CI_PROJECT_NAME}"
   BUILDER_NAME: kwystone-swift-container-builder
   BUILDX_ARGS: >
     --no-cache
@@ -37,6 +36,8 @@ build-image:
         VERSION: $CI_COMMIT_REF_SLUG
   tags:
     - sds-build
+  variables:
+    REGISTRY_IMAGE: "${CONTAINER_REGISTRY_ADDRESS}/sds/${CI_PROJECT_NAME}:${VERSION}"
   before_script:
     - echo "UV_INDEX_ARTIFACTORY_USERNAME=${UV_INDEX_ARTIFACTORY_USERNAME}" > .env
     - echo "UV_INDEX_ARTIFACTORY_PASSWORD=${UV_INDEX_ARTIFACTORY_PASSWORD}" >> .env
@@ -45,7 +46,7 @@ build-image:
       docker buildx create --name $BUILDER_NAME --driver docker-container --bootstrap
   script:
     - echo "Building version ${VERSION}"
-    - docker buildx build $BUILDX_ARGS --push -t "${REGISTRY_IMAGE}:${VERSION}" .
+    - docker buildx build $BUILDX_ARGS --push -t "${REGISTRY_IMAGE}" .
     # Save digest as a dotenv artifact
     - echo "IMAGE_DIGEST=$(cat iid.out)" >> build.env
   artifacts:
@@ -63,12 +64,14 @@ scan-image:
         WATCH: sds-renovate
   tags:
     - sds-test
+  variables:
+    REGISTRY_IMAGE: "${CONTAINER_REGISTRY_ADDRESS}/sds/${CI_PROJECT_NAME}:${CI_COMMIT_REF_SLUG}"
   before_script:
     - jf config import "${JF_CONFIG_READ_ONLY}"
   script:
-    - docker pull "${REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}@${IMAGE_DIGEST}"
-    - docker tag "${REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}@${IMAGE_DIGEST}" "${REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}"
-    - jf docker scan --extended-table --watches=$WATCH "${REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}"
+    - docker pull "${REGISTRY_IMAGE}@${IMAGE_DIGEST}"
+    - docker tag "${REGISTRY_IMAGE}@${IMAGE_DIGEST}" "${REGISTRY_IMAGE}"
+    - jf docker scan --extended-table --watches=$WATCH "${REGISTRY_IMAGE}"
 
 1-push-jfrog-image:
   stage: push
@@ -80,6 +83,7 @@ scan-image:
     JFROG_CLI_BUILD_NAME: $CI_PROJECT_NAME
     JFROG_CLI_BUILD_NUMBER: $CI_COMMIT_TAG
     JFROG_CLI_BUILD_PROJECT: sds
+    REGISTRY_IMAGE: "${CONTAINER_REGISTRY_ADDRESS}/sds/${CI_PROJECT_NAME}:${CI_COMMIT_TAG}"
   before_script:
     - jf config import "${JF_CONFIG}"
   script:
@@ -87,7 +91,7 @@ scan-image:
     - >
       jf docker buildx imagetools create
       --tag "${ARTIFACTORY_SERVER}/sds/${CI_PROJECT_NAME}:${CI_COMMIT_TAG}"
-      "${REGISTRY_IMAGE}:${CI_COMMIT_TAG}@${IMAGE_DIGEST}"
+      "${REGISTRY_IMAGE}@${IMAGE_DIGEST}"
     - echo "${ARTIFACTORY_SERVER}/sds/${CI_PROJECT_NAME}:${CI_COMMIT_TAG}@${IMAGE_DIGEST}" > image-file.txt
     - jf rt bdc sds-docker --image-file image-file.txt
     - jf rt bp
@@ -99,28 +103,26 @@ scan-image:
   rules:
     - if: '$CI_COMMIT_TAG'
   variables:
-    DOCKER_CONFIG: "$CI_PROJECT_DIR/.docker"
+    REGISTRY_IMAGE: "${CONTAINER_REGISTRY_ADDRESS}/sds/${CI_PROJECT_NAME}:${CI_COMMIT_TAG}"
   script:
     - |
       # Pull image from our container registry
-      docker pull "${REGISTRY_IMAGE}:${CI_COMMIT_TAG}@${IMAGE_DIGEST}"
+      docker pull "${REGISTRY_IMAGE}@${IMAGE_DIGEST}"
 
       # Login to GitHub Container Registry
+      export DOCKER_CONFIG="$CI_PROJECT_DIR/.docker"
       mkdir -p "$DOCKER_CONFIG"
       echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USERNAME" --password-stdin
 
-      # Tag the image for GHCR
-      docker tag "${REGISTRY_IMAGE}:${CI_COMMIT_TAG}@${IMAGE_DIGEST}" ghcr.io/cscfi/${CI_PROJECT_NAME}:latest
-      docker tag "${REGISTRY_IMAGE}:${CI_COMMIT_TAG}@${IMAGE_DIGEST}" ghcr.io/cscfi/${CI_PROJECT_NAME}:$CI_COMMIT_SHA
-      docker tag "${REGISTRY_IMAGE}:${CI_COMMIT_TAG}@${IMAGE_DIGEST}" ghcr.io/cscfi/${CI_PROJECT_NAME}:$CI_COMMIT_TAG
-
-      # Push to GHCR
       echo "Pushing images ghcr.io/cscfi/${CI_PROJECT_NAME}:latest"
-      docker push ghcr.io/cscfi/${CI_PROJECT_NAME}:latest
-      echo "Pushing image ghcr.io/cscfi/${CI_PROJECT_NAME}:$CI_COMMIT_SHA"
-      docker push ghcr.io/cscfi/${CI_PROJECT_NAME}:$CI_COMMIT_SHA
-      echo "Pushing image ghcr.io/cscfi/${CI_PROJECT_NAME}:$CI_COMMIT_TAG"
-      docker push ghcr.io/cscfi/${CI_PROJECT_NAME}:$CI_COMMIT_TAG
+      docker buildx imagetools create
+      --tag "ghcr.io/cscfi/${CI_PROJECT_NAME}:latest"
+      "${REGISTRY_IMAGE}@${IMAGE_DIGEST}"
+
+      echo "Pushing image ghcr.io/cscfi/${CI_PROJECT_NAME}:${CI_COMMIT_TAG}"
+      docker buildx imagetools create
+      --tag "ghcr.io/cscfi/${CI_PROJECT_NAME}:${CI_COMMIT_TAG}"
+      "${REGISTRY_IMAGE}@${IMAGE_DIGEST}"
 
 
 release-job:
