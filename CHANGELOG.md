@@ -7,6 +7,11 @@ and this project adheres to [Calendar Versioning](https://calver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- push release to `ghcr.io` with a command that does not strip the image of its multi-platform support
+- in `2-upload-ghcr-image` CI job, define `DOCKER_CONFIG` only after the image has been pulled from the registry
+
 ## [2026.9.0] - 2026-09-17
 
 ### Changed
