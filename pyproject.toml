@@ -6,7 +6,7 @@ license = "MIT"
 requires-python = "==3.14.*"
 dependencies = [
     "keystone==29.1.0",
-    "swift==2.38.1",
+    "swift==2.38.2",
     "keystonemiddleware==13.0.1",
     "python-swiftclient==4.11.0",
     "python-keystoneclient==6.0.0",
