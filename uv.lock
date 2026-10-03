@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 5
 requires-python = "==3.14.*"
 
 [manifest]
@@ -391,7 +391,7 @@ requires-dist = [
     { name = "python-openstackclient", specifier = "==10.3.0" },
     { name = "python-swiftclient", specifier = "==4.11.0" },
     { name = "requests", specifier = "==2.34.2" },
-    { name = "swift", specifier = "==2.38.1" },
+    { name = "swift", specifier = "==2.38.2" },
 ]
 
 [[package]]
@@ -1758,7 +1758,7 @@ wheels = [
 
 [[package]]
 name = "swift"
-version = "2.38.1"
+version = "2.38.2"
 source = { registry = "https://artifactory.ci.csc.fi/artifactory/api/pypi/sds-pypi/simple" }
 dependencies = [
     { name = "cryptography" },
@@ -1771,9 +1771,9 @@ dependencies = [
     { name = "requests" },
     { name = "xattr", marker = "sys_platform != 'win32'" },
 ]
-sdist = { url = "https://artifactory.ci.csc.fi/artifactory/api/pypi/sds-pypi/packages/packages/cb/64/cf5b4b41cc91ba3caf0ad54c64b82927efd8728f82b3d34bb22f9ef50053/swift-2.38.1.tar.gz", hash = "sha256:c231dd5cd1cf3e578f54c2ccb4b73ea2f11ee6cc1ef66d92104df1b6abfc671c" }
+sdist = { url = "https://artifactory.ci.csc.fi/artifactory/api/pypi/sds-pypi/packages/packages/29/23/8334fd28f276e89019af753baeb5d59be70c29dc50aad887e6696112531c/swift-2.38.2.tar.gz", hash = "sha256:0d7d6a98562fd76eee51f2a352005656b7fa98643c041f37df19fe11447da744" }
 wheels = [
-    { url = "https://artifactory.ci.csc.fi/artifactory/api/pypi/sds-pypi/packages/packages/39/7f/c6898c810eb45f81fc3b08d43e8edc9b336718eca0e0a056223d7d2b444b/swift-2.38.1-py3-none-any.whl", hash = "sha256:ee2bf82b9ea311578ae9420e0aafdff2ce4e5059caecaddd6d2c88d03291f4ea" },
+    { url = "https://artifactory.ci.csc.fi/artifactory/api/pypi/sds-pypi/packages/packages/09/9c/0d8234a0c8878ca68bd5d6b60e6c160df057c8a944e78bd696b1ed8923cd/swift-2.38.2-py3-none-any.whl", hash = "sha256:981a7b7ee1df98181af439b2ea4018fcd68217951ef14ae85d38c5cde7bab8db" },
 ]
 
 [[package]]
