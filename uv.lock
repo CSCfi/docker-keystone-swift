@@ -396,15 +396,15 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "faker", specifier = "==40.41.0" },
+    { name = "faker", specifier = "==40.44.0" },
     { name = "gunicorn", specifier = "==26.2.0" },
     { name = "keystone", specifier = "==29.1.0" },
     { name = "keystonemiddleware", specifier = "==13.0.1" },
     { name = "python-keystoneclient", specifier = "==6.0.0" },
-    { name = "python-openstackclient", specifier = "==10.3.0" },
+    { name = "python-openstackclient", specifier = "==10.5.0" },
     { name = "python-swiftclient", specifier = "==4.11.0" },
     { name = "requests", specifier = "==2.34.2" },
-    { name = "swift", specifier = "==2.38.2" },
+    { name = "swift", specifier = "==2.38.3" },
 ]
 
 [[package]]
@@ -444,14 +444,14 @@ wheels = [
 
 [[package]]
 name = "faker"
-version = "40.41.0"
+version = "40.44.0"
 source = { registry = "https://artifactory.ci.csc.fi/artifactory/api/pypi/sds-pypi/simple" }
 dependencies = [
     { name = "tzdata", marker = "sys_platform == 'win32'" },
 ]
-sdist = { url = "https://artifactory.ci.csc.fi/artifactory/api/pypi/sds-pypi/packages/packages/0c/f5/cf09c597bac1c2600e4f77200a7abb73e20fb2a542c11d0c557c1c4220f5/faker-40.41.0.tar.gz", hash = "sha256:5383e4ebba7061491530ae5952a33dcf8f161a250c89717fa0ac856602dcfaf3" }
+sdist = { url = "https://artifactory.ci.csc.fi/artifactory/api/pypi/sds-pypi/packages/packages/87/22/965c7b822f4c80f6e003c696d5fa01b48eea6cc7852d61aec8779519b346/faker-40.44.0.tar.gz", hash = "sha256:97245a3756dcaf35418b89bea9f03ae6881557db0032bf048744c2aaee2a9108" }
 wheels = [
-    { url = "https://artifactory.ci.csc.fi/artifactory/api/pypi/sds-pypi/packages/packages/07/52/9ae853e8c70d6b77fe81b1563378d8ee49aa316cf19502a2e0bf1e4a873e/faker-40.41.0-py3-none-any.whl", hash = "sha256:35a7f66282990698c20c3e6dd57180900206b760c2f777112c085cc217e7de92" },
+    { url = "https://artifactory.ci.csc.fi/artifactory/api/pypi/sds-pypi/packages/packages/58/9e/3da962809aefa00ddf457d1b11bba41d7766373a0ad9e537fa0804604361/faker-40.44.0-py3-none-any.whl", hash = "sha256:db808a3ec33fe9ce5caf40b9fb61f85f46e429a56966f765209272adec83e4c6" },
 ]
 
 [[package]]
@@ -1521,7 +1521,7 @@ wheels = [
 
 [[package]]
 name = "python-openstackclient"
-version = "10.3.0"
+version = "10.5.0"
 source = { registry = "https://artifactory.ci.csc.fi/artifactory/api/pypi/sds-pypi/simple" }
 dependencies = [
     { name = "cliff" },
@@ -1535,9 +1535,9 @@ dependencies = [
     { name = "requests" },
     { name = "stevedore" },
 ]
-sdist = { url = "https://artifactory.ci.csc.fi/artifactory/api/pypi/sds-pypi/packages/packages/9a/d8/cda0230fb90cfc40b5977beecc1f063e6bb7042ae5db1fac05c9d8ccfc64/python_openstackclient-10.3.0.tar.gz", hash = "sha256:6bcc2344d5dca9a4c4920998c0616eb82e9431e41033c91719247c72c61cca4d" }
+sdist = { url = "https://artifactory.ci.csc.fi/artifactory/api/pypi/sds-pypi/packages/packages/22/71/6d547b55339323f2e1c681956baeb36559486c6dccb8b20aa9de03a5dbf5/python_openstackclient-10.5.0.tar.gz", hash = "sha256:a9c77b8d2b53a9413794daa5d60cbb4fa669af64799b704cfb96d75f2e002e8e" }
 wheels = [
-    { url = "https://artifactory.ci.csc.fi/artifactory/api/pypi/sds-pypi/packages/packages/01/26/e105d6214ad7ecacbb4a546817a53c39bf3b433a3e2c932255e6090a2836/python_openstackclient-10.3.0-py3-none-any.whl", hash = "sha256:7fb752196feda765b0c840803374127d18de62d242238e7950069784d9f76ce3" },
+    { url = "https://artifactory.ci.csc.fi/artifactory/api/pypi/sds-pypi/packages/packages/59/f9/fd7fc423783a9d20294c7270f8f0a49eee269e2b35c0e2783c6be6f5fa58/python_openstackclient-10.5.0-py3-none-any.whl", hash = "sha256:a31f7dfa25650bea045df42f3301677b344f2dd6cf9193d2531fe2725132685b" },
 ]
 
 [[package]]
@@ -1783,7 +1783,7 @@ wheels = [
 
 [[package]]
 name = "swift"
-version = "2.38.2"
+version = "2.38.3"
 source = { registry = "https://artifactory.ci.csc.fi/artifactory/api/pypi/sds-pypi/simple" }
 dependencies = [
     { name = "cryptography" },
@@ -1796,9 +1796,9 @@ dependencies = [
     { name = "requests" },
     { name = "xattr", marker = "sys_platform != 'win32'" },
 ]
-sdist = { url = "https://artifactory.ci.csc.fi/artifactory/api/pypi/sds-pypi/packages/packages/29/23/8334fd28f276e89019af753baeb5d59be70c29dc50aad887e6696112531c/swift-2.38.2.tar.gz", hash = "sha256:0d7d6a98562fd76eee51f2a352005656b7fa98643c041f37df19fe11447da744" }
+sdist = { url = "https://artifactory.ci.csc.fi/artifactory/api/pypi/sds-pypi/packages/packages/b8/76/c38bd1881c12f037071c4cfdf079279937b4099f7c7600688de64c52877e/swift-2.38.3.tar.gz", hash = "sha256:561b2f8acc5ce834a0a2bac200e8ccd8784cb5c4a9e3731881d2e66dec4b6006" }
 wheels = [
-    { url = "https://artifactory.ci.csc.fi/artifactory/api/pypi/sds-pypi/packages/packages/09/9c/0d8234a0c8878ca68bd5d6b60e6c160df057c8a944e78bd696b1ed8923cd/swift-2.38.2-py3-none-any.whl", hash = "sha256:981a7b7ee1df98181af439b2ea4018fcd68217951ef14ae85d38c5cde7bab8db" },
+    { url = "https://artifactory.ci.csc.fi/artifactory/api/pypi/sds-pypi/packages/packages/3f/c2/27b11585e889b4d25757d0527b7658d57f5a373219abcb8df370e2b88693/swift-2.38.3-py3-none-any.whl", hash = "sha256:d8db9539f998b36da4cb3bd4ab93981409a5791ef4aa09efe68956c61acca312" },
 ]
 
 [[package]]
