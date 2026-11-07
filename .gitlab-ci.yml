@@ -10,7 +10,7 @@ include:
     file: 'releases.yml'
 
 default:
-  image: "${ARTIFACTORY_SERVER}/sds/sdd-common-ci:2026.9.3@sha256:f4e479e35c1155e8422bec6d23315f5e6fae997188c6d41076600a6804ab9089"
+  image: "${ARTIFACTORY_SERVER}/sds/sdd-common-ci:2026.10.1@sha256:d77c07a571ae799ede75bcb318a74198d1b1ed633781403563ea767924300a9c"
 
 variables:
   BUILDER_NAME: kwystone-swift-container-builder
