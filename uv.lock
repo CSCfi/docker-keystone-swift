@@ -399,7 +399,7 @@ requires-dist = [
     { name = "faker", specifier = "==40.44.0" },
     { name = "gunicorn", specifier = "==26.2.0" },
     { name = "keystone", specifier = "==29.1.0" },
-    { name = "keystonemiddleware", specifier = "==13.0.1" },
+    { name = "keystonemiddleware", specifier = "==13.0.2" },
     { name = "python-keystoneclient", specifier = "==6.0.0" },
     { name = "python-openstackclient", specifier = "==10.5.0" },
     { name = "python-swiftclient", specifier = "==4.11.0" },
@@ -699,7 +699,7 @@ wheels = [
 
 [[package]]
 name = "keystonemiddleware"
-version = "13.0.1"
+version = "13.0.2"
 source = { registry = "https://artifactory.ci.csc.fi/artifactory/api/pypi/sds-pypi/simple" }
 dependencies = [
     { name = "keystoneauth1" },
@@ -717,9 +717,9 @@ dependencies = [
     { name = "requests" },
     { name = "webob" },
 ]
-sdist = { url = "https://artifactory.ci.csc.fi/artifactory/api/pypi/sds-pypi/packages/packages/03/21/b589d73848e41a8880f1788dae6f6934c7440cb40ab7d56cee21988ed51a/keystonemiddleware-13.0.1.tar.gz", hash = "sha256:0f599645711fb7beb2721bfa409d92b69b5c3ee3788fd5d1f5db0e57f38f44a7" }
+sdist = { url = "https://artifactory.ci.csc.fi/artifactory/api/pypi/sds-pypi/packages/packages/4c/e4/726adab8ea4661bb5fbfef5d508b058c162dd0f0750ffb80be49ea00285e/keystonemiddleware-13.0.2.tar.gz", hash = "sha256:6d8ef0f39b4cdaac7a3a2e47c15711aa3c6874c55d04ca7777cfdf8eaadfc066" }
 wheels = [
-    { url = "https://artifactory.ci.csc.fi/artifactory/api/pypi/sds-pypi/packages/packages/19/15/8f2c43e91c514110825484d34479e304cdf7a260b15d9eebf619695786ce/keystonemiddleware-13.0.1-py3-none-any.whl", hash = "sha256:a3e1139a875f82d1100d8d5c399e2e12bc54f315b997daf3b1d377007303a027" },
+    { url = "https://artifactory.ci.csc.fi/artifactory/api/pypi/sds-pypi/packages/packages/be/45/a24b3aca2b68efe1906c398e0cc8f488b01f3f069a5342e2a9b7269b6bc9/keystonemiddleware-13.0.2-py3-none-any.whl", hash = "sha256:c6fd5d64be0206e87f46347af6afd4ae2bf17b34b980716e6a243eb13c1fae18" },
 ]
 
 [[package]]
