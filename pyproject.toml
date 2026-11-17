@@ -13,7 +13,7 @@ dependencies = [
     "python-openstackclient==10.5.0",
     "gunicorn==26.2.0",
     "requests==2.34.2",
-    "Faker==40.44.0"
+    "Faker==40.52.0"
 ]
 
 [tool.uv]
